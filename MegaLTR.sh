@@ -396,7 +396,7 @@ $VSEARCH_BIN --cluster_fast $USERCH/LTR-RT_Sequence_sorted.fa \
                do
                   clustalw -infile="$fst" >>$Others/$process_id.clustalw.txt  ### Alignment of the LTR using clustalw
                   fname=$(basename $fst ".fasta")
-                  ltrk=$(perl $RUN/estimate_K.pl $time/$fname".aln" $RateOfEvolution) ## estimate LTR-RT insertion time using Kimura and Tajima&Nei methods (this script is part of REannotate program)
+                  ltrk=$(python3 $RUN/estimate_K.py $time/$fname".aln" $RateOfEvolution) ## estimate LTR-RT insertion time using Kimura and Tajima&Nei methods (this script is part of REannotate program)
                   echo -e $fname "\t""$ltrk"  >> $Others/$process_id.time.txt
                done
             perl $RUN/TEsorterandtable_time.pl  $Others/LTR_Table_TEsorter_Digest.tsv $Others/$process_id.time.txt >$Others/$process_id.Digest_TEsorter_Time.tsv  ############# $Others/$process_id.Digest_TEsorter_Time (header) org_name	acc	element_start	element_end	element_length			strand	lTSD_start	lTSD_end	lLTR_start	lLTR_end	rLTR_start	rLTR_end	rTSD_start	rTSD_end	EDTA_infoo	PPT start	PPT end	PPT motif	PPT offset	PBS start	PBS end	tRNA	tRNA motif	PBS offset	tRNA offset	PBS/tRNA	edist Order	Superfamily	Clade	Complete	Strand	Domains	LTRNAME	K_Kimura	K_Ksd	K_TajimaNei	K_TNsd	timeK	timeKsd	numComparedSites	transitions	numComparedSites	transversions	numComparedSites	timeTN	transitions_numComparedSites	transversions_numComparedSites
