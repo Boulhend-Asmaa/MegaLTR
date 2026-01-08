@@ -10,7 +10,7 @@ import math
 import re
 
 
-def align2K(align_file):
+def align2K(align_file, rate_of_evolution):
     """Parse ClustalW alignment file and calculate distances"""
 
     # Read all lines from alignment file
@@ -56,7 +56,7 @@ def align2K(align_file):
     ltr2 = ''.join(ltr2_seqs)
     consensus = ''.join(consensus_lines)
 
-    return get_distances(ltr1, ltr2, consensus)
+    return get_distances(ltr1, ltr2, consensus, rate_of_evolution)
 
 
 def get_distances(seq1, seq2, consensus, rate_of_evolution):
@@ -228,46 +228,7 @@ def main():
     rate_of_evolution = float(sys.argv[2])
 
     try:
-        result = align2K(align_file)
-        # Pass rate_of_evolution to get_distances
-        # Need to re-parse to inject rate_of_evolution
-        with open(align_file, 'r') as f:
-            lines = f.readlines()
-
-        clustalw_offset = 0
-        while clustalw_offset < len(lines) and not re.search(r"(5'|3')", lines[clustalw_offset]):
-            clustalw_offset += 1
-
-        ltr1_lines = [line for line in lines if "5'" in line]
-        ltr2_lines = [line for line in lines if "3'" in line]
-
-        ltr1_seqs = []
-        ltr2_seqs = []
-
-        for line in ltr1_lines:
-            match = re.search(r'^\S+\s+([\w-]+)\s*$', line.strip())
-            if match:
-                ltr1_seqs.append(match.group(1))
-
-        for line in ltr2_lines:
-            match = re.search(r'^\S+\s+([\w-]+)\s*$', line.strip())
-            if match:
-                ltr2_seqs.append(match.group(1))
-
-        consensus_lines = []
-        for line_num in range(1, len(ltr1_seqs) + 1):
-            idx = (clustalw_offset - 2) + 4 * line_num
-            if idx < len(lines):
-                consensus_line = lines[idx].strip()
-                num_sites = len(ltr1_seqs[line_num - 1])
-                consensus_line = consensus_line[-num_sites:] if len(consensus_line) >= num_sites else consensus_line
-                consensus_lines.append(consensus_line)
-
-        ltr1 = ''.join(ltr1_seqs)
-        ltr2 = ''.join(ltr2_seqs)
-        consensus = ''.join(consensus_lines)
-
-        result = get_distances(ltr1, ltr2, consensus, rate_of_evolution)
+        result = align2K(align_file, rate_of_evolution)
         print(result)
 
     except FileNotFoundError:
