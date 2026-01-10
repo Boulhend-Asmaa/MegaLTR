@@ -1,8 +1,7 @@
 # Progress Report #3: Complete Perl to Python Migration
 
 **Project**: MegaLTR Pipeline Optimization and Bug Fixes
-**Student**: Asmaa Boulhend
-**Supervisor**: Prof. Morad M. Mokhtar
+**research assistant**: Asmaa Boulhend
 **Date**: January 9, 2026
 **Report Period**: December 2025 - January 2026
 
