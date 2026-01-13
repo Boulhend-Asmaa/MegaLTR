@@ -1,6 +1,6 @@
 # FASTA Splitting Analysis and Optimization
 
-**Date**: 2026-01-12
+**Date**: 2026-01-13
 **Author**: Asmaa Boulhend
 **Project**: MegaLTR Pipeline Optimization
 
