@@ -1,7 +1,7 @@
 # MegaLTR Environment Cleanup - Summary
 
 **Research assistant**: Asmaa Boulhend
-**Date**: 2026-01-10
+**Date**: 2026-01-12
 **Objective**: Clean and freeze Conda environment for reproducibility
 
 ---
