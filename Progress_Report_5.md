@@ -18,6 +18,29 @@ Phase 5 successfully addressed a critical efficiency bug in MegaLTR's coordinate
 
 ---
 
+## Quick Summary: What Changed and Why
+
+**What we changed:**
+- **Location**: MegaLTR.sh line 337 (coordinate file splitting for parallel extraction)
+- **Old code**: `split -n l/100` → Fixed 100 chunks, regardless of input size
+- **New code**: `smart_split_tsv.py` → Adaptive chunk count scaled to input size
+
+**The problem:**
+For small genomes with few LTR elements, fixed splitting created excessive empty files. Example: 39 LTR coordinates split into 100 chunks resulted in 61 empty files (61% waste).
+
+**The solution:**
+Adaptive algorithm: `min(lines, threads × 4)` for small inputs, guaranteeing zero empty chunks while maintaining balanced distribution.
+
+**Results (Arabidopsis chr1 test):**
+- Chunk count: 100 → 16 (84% reduction)
+- Empty chunks: 61 → 0 (100% elimination)
+- Scientific output: Identical (39 LTRs, 39 sequences, byte-for-byte match)
+
+**Why it matters:**
+Eliminates wasted file I/O, process spawns, and HPC resources while providing correct parallelization for both small test genomes and large production genomes.
+
+---
+
 ## 1. Background and Motivation
 
 ### 1.1 Project Context

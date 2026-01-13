@@ -11,7 +11,32 @@
 
 **Clarification**: This phase optimized the splitting of **TSV coordinate files** (`.ids.extract_seq`), not genome FASTA sequences. True genome FASTA splitting was prepared for Phase 6 (Nextflow migration) but is not integrated in this phase.
 
-Phase 5 successfully addresses a critical efficiency bug in MegaLTR's coordinate file splitting, eliminating 84% of unnecessary files for small genomes and laying groundwork for true genome FASTA-based parallelization in Phase 6 (Nextflow).
+### The Problem and Solution
+
+**Old Implementation (MegaLTR.sh line 337):**
+The original code used `split -n l/100` to divide LTR coordinate files into exactly 100 fixed chunks for parallel sequence extraction. This approach caused a critical inefficiency: when a genome had fewer than 100 LTR elements, GNU split distributed them round-robin across all 100 chunks, leaving many chunks completely empty.
+
+**Example (Arabidopsis chr1):**
+- Input: 39 LTR coordinates
+- Old method: Created 100 chunk files → **61 were empty (0 bytes)** → 61% waste
+- Impact: 61 unnecessary file I/O operations, 61 wasted process spawns, inefficient HPC resource usage
+
+**New Implementation (smart_split_tsv.py):**
+Replaced fixed splitting with an **adaptive algorithm** that scales chunk count to input size:
+- Small inputs (< 100 lines): `min(lines, threads × 4)` chunks
+- Large inputs (≥ 100 lines): `min(100, lines // 10)` chunks
+- **Guarantee: Never creates more chunks than lines → zero empty files**
+
+**Results (Arabidopsis chr1):**
+- Input: 39 LTR coordinates
+- New method: Created 16 chunk files → **0 empty** → 84% file reduction
+- Scientific output: **Identical** (39 LTRs detected, 39 sequences extracted)
+
+**Why This Matters:**
+1. **Efficiency**: Eliminates wasted file I/O, process spawns, and disk inodes
+2. **HPC optimization**: No wasted job array slots on empty inputs
+3. **Scalability**: Works correctly for both small genomes (test data) and large genomes (production)
+4. **Foundation for Phase 6**: Clean, adaptive splitting logic ready for Nextflow parallelization
 
 **Key Achievement**: **61% empty files → 0% empty files** (39 LTRs: 100 chunks → 16 chunks)
 
