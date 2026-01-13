@@ -11,7 +11,8 @@ LTR_HARVEST=$(pwd)/bin/LTR_HARVEST_parallel/LTR_HARVEST_parallel
 LTRretriever=$(pwd)/bin/LTR_retriever/LTR_retriever
 chmod 775 $LTRretriever #Give execulting permissions for LTRretriever
 RUN=$(pwd)/bin/RUN
-chmod 775 $RUN/usearch11.0.667_i86linux32 #Give execulting permissions
+# USEARCH removed (32-bit incompatible). Using VSEARCH instead.
+ #Give execulting permissions
 eval "$(conda shell.bash hook)"
 ############################################################
 # Set variables                                            #
@@ -154,15 +155,15 @@ conda activate MegaLTR
          echo
          printf "\tCheck the FASTA File format.\n"
          gunzip -c "$Fastafilepath" >$userpath/$process_id.fna
-         perl $RUN/checkfasta.pl $userpath/$process_id.fna ### Check the FASTA File format
+         python3 $RUN/checkfasta.py $userpath/$process_id.fna ### Check the FASTA File format
       elif [[ $Fastafilepath =~ \.zip$ ]]; then
          echo
          printf "\tCheck the FASTA File format.\n"
          gunzip -c "$Fastafilepath" >$userpath/$process_id.fna
-         perl $RUN/checkfasta.pl $userpath/$process_id.fna ### Check the FASTA File format
+         python3 $RUN/checkfasta.py $userpath/$process_id.fna ### Check the FASTA File format
       elif ([ $(stat -c%s "$Fastafilepath") -gt 500 ]); then
          printf "\tCheck the FASTA File format.\n"
-         perl $RUN/checkfasta.pl $Fastafilepath ### Check the FASTA File format
+         python3 $RUN/checkfasta.py $Fastafilepath ### Check the FASTA File format
          cp $Fastafilepath $userpath/$process_id.fna #### copy fasta file tRNA files
       else
          printf "\n\tCheck the FASTA File format.\n"
@@ -206,13 +207,22 @@ conda activate MegaLTR
          printf "\n\t$now51 \tLTR_HARVEST Started %s\n"
          mkdir -p $userpath/density
          densitypath=$userpath/density
-         conda config --show envs_dirs >$densitypath/condapath
-         sed -i '1d' $densitypath/condapath
-         sed -i 's/  - //g' $densitypath/condapath
-            for condapath in `less $densitypath/condapath`
-            do
-               perl $LTR_HARVEST -seq $userpath/$process_id.fna -threads $threads -size 1000000 -time 500 -gt $condapath/MegaLTR/bin/gt $minlenltr $maxlenltr $similar > /dev/null 2>/dev/null
-            done
+         # --- Find GenomeTools (gt) binary ---
+GT_BIN=$(command -v gt)
+if [ -z "$GT_BIN" ]; then
+  echo "ERROR: GenomeTools (gt) not found in PATH"
+  exit 1
+fi
+
+# --- Run LTR_HARVEST once ---
+perl $LTR_HARVEST \
+  -seq $userpath/$process_id.fna \
+  -threads $threads \
+  -size 1000000 \
+  -time 500 \
+  -gt $GT_BIN \
+  $minlenltr $maxlenltr $similar \
+  > /dev/null 2>/dev/null
          cat $FASTA/$process_id.fna.harvest.combine.scn  $FASTA/$process_id.fna.finder.combine.scn >$FASTA/$process_id.all.harvest.finder.combine
 
          now5="$(date)"
@@ -310,11 +320,11 @@ conda activate MegaLTR
          printf "\t$now12 \tFiltering TEsorter results Started %s\n"
          awk -F '\t' '$2 == "LTR"' $TEsorter/"$process_id"_complete.fas.$TEsorterhmm.cls.tsv >$Others/$process_id.LTR.tsv  ##### search inside a specific column
          awk -F '\t' '$2 != "LTR"' $TEsorter/"$process_id"_complete.fas.$TEsorterhmm.cls.tsv >$Others/$process_id.others.tsv  ##### search inside a specific column remove any other elements (like nested, LINE, ... any thing eles LTR)
-         perl $RUN/print.pl $ltrdigest/"$process_id"_tabout.csv >$Others/$process_id.tabout.tsv ###### $Others/$"$process_id".tabout.tsv header ########## element	id element start	element end	element length	sequence	lLTR start	lLTR end	lLTR length	rLTR start	rLTR end	rLTR length	lTSD start	lTSD end	lTSD motif	rTSD start	rTSD end	rTSD motif	PPT start	PPT end	PPT motif	PPT strand	PPT offset	PBS start	PBS end	PBS strand	tRNA	tRNA motif	PBS offset	tRNA offset	PBS/tRNA edist
+         python3 $RUN/print_ltrdigest.py $ltrdigest/"$process_id"_tabout.csv >$Others/$process_id.tabout.tsv ###### $Others/$"$process_id".tabout.tsv header ########## element	id element start	element end	element length	sequence	lLTR start	lLTR end	lLTR length	rLTR start	rLTR end	rLTR length	lTSD start	lTSD end	lTSD motif	rTSD start	rTSD end	rTSD motif	PPT start	PPT end	PPT motif	PPT strand	PPT offset	PBS start	PBS end	PBS strand	tRNA	tRNA motif	PBS offset	tRNA offset	PBS/tRNA edist
          now13="$(date)"
          echo
          printf "\t$now13 \tMergeing of LTR_retriever, LTRdigest, and TEsorter results %s\n"
-         perl $RUN/TEsorter_Digest.pl  $Others/$process_id.tabout.tsv $Others/$process_id.LTR.tsv >$Others/2LTR_Table_TEsorter_Digest.tsv
+         python3 $RUN/join_tables.py  $Others/$process_id.tabout.tsv $Others/$process_id.LTR.tsv >$Others/2LTR_Table_TEsorter_Digest.tsv
          python3 $RUN/classification_NEW_LTR_2.py $Others/2LTR_Table_TEsorter_Digest.tsv  $Others/new_LTR_Table_TEsorter_Digest.tsv
          awk -F'\t' '{print $2"\t"$3"\t"$4"\t"$5"\t"$6"\t"$7"\t"$8"\t"$9"\t"$10"\t"$11"\t"$12"\t"$13"\t"$14"\t"$15"\t"$16"\t"$17"\t"$18"\t"$19"\t"$20"\t"$21"\t"$22"\t"$23"\t"$24"\t"$25"\t"$26"\t"$27"\t"$28"\t"$29"\t"$30"\t"$31"\t"$32"\t"$33"\t"$1"\t"$35"\t"$36"\t"$37"\t"$38}' $Others/new_LTR_Table_TEsorter_Digest.tsv > $Others/LTR_Table_TEsorter_Digest.tsv
          cp $Others/LTR_Table_TEsorter_Digest.tsv $Collected_Files ### LTR_retriever, LTRdigest, and TEsorter results in one file 
@@ -323,9 +333,18 @@ conda activate MegaLTR
          awk -F "\t" '{ print  $2"\t"$3"\t"$4"\t"$5"\t"$32"\t"$33"\t"$34 }' $Others/LTR_Table_TEsorter_Digest.tsv > $Others/$process_id.ids.extract_seq
          mkdir -p $userpath/LTRFiles
          LTRFiles=$userpath/LTRFiles
-         cd $LTRFiles
-         split -n l/100 $Others/$process_id.ids.extract_seq
-         python3 $RUN/LTR_Seq_threads.py $userpath/$process_id.fna  $LTRFiles $Collected_Files $threads $RUN/extractseq-id-start-end.pl
+
+         # --- Smart splitting: adaptive chunks, no empty files (Phase 5 optimization) ---
+         echo "$(date) Splitting coordinate file for parallel extraction..."
+         python3 $RUN/smart_split_tsv.py \
+             $Others/$process_id.ids.extract_seq \
+             $LTRFiles \
+             --threads $threads \
+             --prefix chunk \
+             2>&1 | grep -E "(Created|Error|Warning)" || true
+
+         python3 $RUN/LTR_Seq_threads.py $userpath/$process_id.fna  $LTRFiles $Collected_Files $threads $RUN/extractseq-id-start-end.py
+
          cp $ltrdigest/"$process_id"_pbs.fas $Collected_Files/$process_id.PBS.Sequence.fa
          cp $ltrdigest/"$process_id"_ppt.fas $Collected_Files/$process_id.PPT.Sequence.fa      
          sed  -i '1i LTR-RT id\tPseudomolecules/scaffolds\tLTR-RT start\tLTR-RT end\tLTR-RT length\tlLTR start\tlLTR end\tlLTR length\trLTR start\trLTR end\trLTR length\tlTSD start\tlTSD end\tlTSD sequence\trTSD start\trTSD end\trTSD sequence\tPPT start\tPPT end\tPPT motif\tStrand\tPPT offset\tPBS start\tPBS end\tStrand\ttRNA id\ttRNA motif\tPBS offset\ttRNA offset\tPBS/tRNA\t\tClass\tSuperfamily\tClade\tComplete\tStrand\tDomains' $Collected_Files/LTR_Table_TEsorter_Digest.tsv
@@ -335,9 +354,29 @@ conda activate MegaLTR
          USERCH= mkdir -p $userpath/USERCH
          USERCH=$userpath/USERCH
 		   cp $Collected_Files/LTR-RT_Sequence.fa $USERCH/LTR-RT_Sequence.fa
-		   $RUN/usearch11.0.667_i86linux32  -sortbylength $USERCH/LTR-RT_Sequence.fa --fastaout $USERCH/LTR-RT_Sequence_sorted.fa --log $USERCH/usearch.log
-		   $RUN/usearch11.0.667_i86linux32  -cluster_fast  $USERCH/LTR-RT_Sequence_sorted.fa --id 0.9 --centroids $USERCH/LTR-RTs_non-redundant.fa --uc $USERCH/result.uc -consout $USERCH/LTR-RTs_conses.fa -msaout $USERCH/aligned.fasta --log $USERCH/usearch2.log
-		   rm $USERCH/aligned.* 
+		  # --- Use VSEARCH instead of USEARCH (32-bit incompatible binary) ---
+VSEARCH_BIN="/home/asmaa/miniconda3/envs/vsearch_env/bin/vsearch"
+
+if [ ! -x "$VSEARCH_BIN" ]; then
+  echo "ERROR: vsearch binary not found or not executable: $VSEARCH_BIN"
+  exit 1
+fi
+
+# Sort sequences by length
+$VSEARCH_BIN --sortbylength $USERCH/LTR-RT_Sequence.fa \
+  --output $USERCH/LTR-RT_Sequence_sorted.fa \
+  --log $USERCH/vsearch_sort.log
+
+# Cluster sequences (90% identity) to build non-redundant library
+$VSEARCH_BIN --cluster_fast $USERCH/LTR-RT_Sequence_sorted.fa \
+  --id 0.90 \
+  --centroids $USERCH/LTR-RTs_non-redundant.fa \
+  --uc $USERCH/result.uc \
+  --consout $USERCH/LTR-RTs_conses.fa \
+  --msaout $USERCH/aligned.fasta \
+  --threads $threads \
+  --log $USERCH/vsearch_cluster.log
+        		   rm $USERCH/aligned.* 
 		   cp $USERCH/LTR-RTs_non-redundant.fa $Collected_Files/LTR-RTs_non-redundant_library.fasta
 		   now100="$(date)"
          
@@ -365,10 +404,10 @@ conda activate MegaLTR
                do
                   clustalw -infile="$fst" >>$Others/$process_id.clustalw.txt  ### Alignment of the LTR using clustalw
                   fname=$(basename $fst ".fasta")
-                  ltrk=$(perl $RUN/estimate_K.pl $time/$fname".aln" $RateOfEvolution) ## estimate LTR-RT insertion time using Kimura and Tajima&Nei methods (this script is part of REannotate program)
+                  ltrk=$(python3 $RUN/estimate_K.py $time/$fname".aln" $RateOfEvolution) ## estimate LTR-RT insertion time using Kimura and Tajima&Nei methods (this script is part of REannotate program)
                   echo -e $fname "\t""$ltrk"  >> $Others/$process_id.time.txt
                done
-            perl $RUN/TEsorterandtable_time.pl  $Others/LTR_Table_TEsorter_Digest.tsv $Others/$process_id.time.txt >$Others/$process_id.Digest_TEsorter_Time.tsv  ############# $Others/$process_id.Digest_TEsorter_Time (header) org_name	acc	element_start	element_end	element_length			strand	lTSD_start	lTSD_end	lLTR_start	lLTR_end	rLTR_start	rLTR_end	rTSD_start	rTSD_end	EDTA_infoo	PPT start	PPT end	PPT motif	PPT offset	PBS start	PBS end	tRNA	tRNA motif	PBS offset	tRNA offset	PBS/tRNA	edist Order	Superfamily	Clade	Complete	Strand	Domains	LTRNAME	K_Kimura	K_Ksd	K_TajimaNei	K_TNsd	timeK	timeKsd	numComparedSites	transitions	numComparedSites	transversions	numComparedSites	timeTN	transitions_numComparedSites	transversions_numComparedSites
+            python3 $RUN/join_tables.py  $Others/LTR_Table_TEsorter_Digest.tsv $Others/$process_id.time.txt >$Others/$process_id.Digest_TEsorter_Time.tsv  ############# $Others/$process_id.Digest_TEsorter_Time (header) org_name	acc	element_start	element_end	element_length			strand	lTSD_start	lTSD_end	lLTR_start	lLTR_end	rLTR_start	rLTR_end	rTSD_start	rTSD_end	EDTA_infoo	PPT start	PPT end	PPT motif	PPT offset	PBS start	PBS end	tRNA	tRNA motif	PBS offset	tRNA offset	PBS/tRNA	edist Order	Superfamily	Clade	Complete	Strand	Domains	LTRNAME	K_Kimura	K_Ksd	K_TajimaNei	K_TNsd	timeK	timeKsd	numComparedSites	transitions	numComparedSites	transversions	numComparedSites	timeTN	transitions_numComparedSites	transversions_numComparedSites
             python3 $RUN/modifyGFF.py $Others/$process_id.Digest_TEsorter_Time.tsv $userpath/$process_id.mapping.txt 2
             cp $Others/$process_id.Digest_TEsorter_Time.tsv $Collected_Files ### LTR_retriever, LTRdigest, TEsorter, and insertion time results in one file
             sed  -i '1i LTR-RT id\tPseudomolecules/scaffolds\tLTR-RT start\tLTR-RT end\tLTR-RT length\tlLTR start\tlLTR end\tlLTR length\trLTR start\trLTR end\trLTR length\tlTSD start\tlTSD end\tlTSD sequence\trTSD start\trTSD end\trTSD sequence\tPPT start\tPPT end\tPPT motif\tStrand\tPPT offset\tPBS start\tPBS end\tStrand\ttRNA id\ttRNA motif\tPBS offset\ttRNA offset\tPBS/tRNA\t\tClass\tSuperfamily\tClade\tComplete\tStrand\tDomains\tK_Kimura\tK_Ksd\tK_TajimaNei\tK_TNsd\ttimeK\ttimeKsd\tnumComparedSites\ttransitions\tnumComparedSites\ttransversions\tnumComparedSites\ttimeTN\ttransitions_numComparedSites\ttransversions_numComparedSites' $Collected_Files/$process_id.Digest_TEsorter_Time.tsv
@@ -403,12 +442,12 @@ conda activate MegaLTR
             grep -P "\tgene\t" $userpath/$process_id.gff > $userpath/$process_id.grep.gene ## retrieve gene start and end from GFF file
             grep -P "\tpseudogene\t" $userpath/$process_id.gff > $userpath/$process_id.grep.pseudogene ## retrieve pseudogene start and end from GFF file
             cat $userpath/$process_id.grep.gene  $userpath/$process_id.grep.pseudogene > $userpath/$process_id.gene_pseudogene.gff  ## combine gene and pseudogene in one file
-            perl $RUN/get-TE-within-gene.pl $Others/$process_id.Digest_TEsorter_Time.tsv  $userpath/$process_id.gene_pseudogene.gff $process_id $inside_genes > $inside_genes/$process_id.LTR_inside_genes.table  ## determine the LTR-RT located inside the gene start and end
+            python3 $RUN/get-TE-within-gene.py $Others/$process_id.Digest_TEsorter_Time.tsv  $userpath/$process_id.gene_pseudogene.gff $process_id $inside_genes > $inside_genes/$process_id.LTR_inside_genes.table  ## determine the LTR-RT located inside the gene start and end
             awk -F "\t" '{ print $1 }' $inside_genes/$process_id.LTR_inside_genes.table >$inside_genes/$process_id.LTR_inside_genes.table.ids
             awk -F "\t" '{ print $1 }' $Others/$process_id.Digest_TEsorter_Time.tsv >$inside_genes/$process_id.LTR_Table_Digest_TEsorter_Time.ids
             grep -F -x -v -f $inside_genes/$process_id.LTR_inside_genes.table.ids $inside_genes/$process_id.LTR_Table_Digest_TEsorter_Time.ids >$inside_genes/LTR_Table_Digest_TEsorter_Time_process   ###### print found in file 2 an not found in file 1 
             grep -f $inside_genes/LTR_Table_Digest_TEsorter_Time_process $Others/$process_id.Digest_TEsorter_Time.tsv > $inside_genes/LTR_Table_Digest_TEsorter_Time_nongene1
-            perl $RUN/No.pl $inside_genes/LTR_Table_Digest_TEsorter_Time_nongene1 >$inside_genes/LTR_Table_Digest_TEsorter_Time_nongene  ## determine which LTR-RT located outside the gene start and end
+            python3 $RUN/add_no_column.py $inside_genes/LTR_Table_Digest_TEsorter_Time_nongene1 >$inside_genes/LTR_Table_Digest_TEsorter_Time_nongene  ## determine which LTR-RT located outside the gene start and end
             cat $inside_genes/$process_id.LTR_inside_genes.table $inside_genes/LTR_Table_Digest_TEsorter_Time_nongene >$inside_genes/LTR_Table_Digest_TEsorter_Time_nongene_and_gene.tsv ## combine the LTR-RT located insid and outside the gene start and end in one file
             cp $inside_genes/LTR_Table_Digest_TEsorter_Time_nongene_and_gene.tsv $Collected_Files
             sed  -i '1i LTR-RT id\tPseudomolecules/scaffolds\tLTR-RT start\tLTR-RT end\tLTR-RT length\tlLTR start\tlLTR end\tlLTR length\trLTR start\trLTR end\trLTR length\tlTSD start\tlTSD end\tlTSD sequence\trTSD start\trTSD end\trTSD sequence\tPPT start\tPPT end\tPPT motif\tStrand\tPPT offset\tPBS start\tPBS end\tStrand\ttRNA id\ttRNA motif\tPBS offset\ttRNA offset\tPBS/tRNA\tClass\tSuperfamily\tClade\tComplete\tStrand\tDomains\tK_Kimura\tK_Ksd\tK_TajimaNei\tK_TNsd\ttimeK\ttimeKsd\tnumComparedSites\ttransitions\tnumComparedSites\ttransversions\tnumComparedSites\ttimeTN\ttransitions_numComparedSites\ttransversions_numComparedSites\tinside gene status\tgene/pseudogene\tGene start\tGene end\tstrand\tgene annotation' $Collected_Files/LTR_Table_Digest_TEsorter_Time_nongene_and_gene.tsv
@@ -423,10 +462,10 @@ conda activate MegaLTR
             sed  's/\t?\t/\t+\t/g' $Others/$process_id.Digest_TEsorter_Time.tsv >$near_genes/$process_id.Digest_TEsorter_Time2
             awk -F '\t' '$36=="+"'  $near_genes/$process_id.Digest_TEsorter_Time2 >$near_genes/$process_id.Digest_TEsorter_Time5+
             awk -F '\t' '$36=="-"'  $near_genes/$process_id.Digest_TEsorter_Time2 >$near_genes/$process_id.Digest_TEsorter_Time5-
-            perl $RUN/get-TE-near-gene-minuse1k.pl $near_genes/$process_id.Digest_TEsorter_Time5+ $near_genes/$process_id.gene_pseudogene.gff2 $up $down >$near_genes/up_genes+
-            perl $RUN/get-TE-near-gene-pluse-1k.pl $near_genes/$process_id.Digest_TEsorter_Time5+ $near_genes/$process_id.gene_pseudogene.gff2 $up $down >$near_genes/down_genes+
-            perl $RUN/get-TE-near-gene-minuse-1k.pl $near_genes/$process_id.Digest_TEsorter_Time5- $near_genes/$process_id.gene_pseudogene.gff2 $up $down >$near_genes/down_genes-
-            perl $RUN/get-TE-near-gene-pluse+1k.pl $near_genes/$process_id.Digest_TEsorter_Time5- $near_genes/$process_id.gene_pseudogene.gff2 $up $down >$near_genes/up_genes-
+            python3 $RUN/get-TE-near-gene.py $near_genes/$process_id.Digest_TEsorter_Time5+ $near_genes/$process_id.gene_pseudogene.gff2 $up $down minus-upstream >$near_genes/up_genes+
+            python3 $RUN/get-TE-near-gene.py $near_genes/$process_id.Digest_TEsorter_Time5+ $near_genes/$process_id.gene_pseudogene.gff2 $up $down plus-downstream >$near_genes/down_genes+
+            python3 $RUN/get-TE-near-gene.py $near_genes/$process_id.Digest_TEsorter_Time5- $near_genes/$process_id.gene_pseudogene.gff2 $up $down minus-downstream >$near_genes/down_genes-
+            python3 $RUN/get-TE-near-gene.py $near_genes/$process_id.Digest_TEsorter_Time5- $near_genes/$process_id.gene_pseudogene.gff2 $up $down plus-upstream >$near_genes/up_genes-
             cat $near_genes/up_genes+ $near_genes/down_genes+ $near_genes/down_genes- $near_genes/up_genes- >$near_genes/genes_up_and_down_LTR.tsv
             cp $near_genes/genes_up_and_down_LTR.tsv  $Collected_Files/$process_id.genes_up_and_down_LTR.tsv
             sed  -i '1i LTR-RT id\tUp/Downstream\tPseudomolecules/scaffolds\tLTR-RT start\tLTR-RT end\tLTR-RT length\tlLTR start\tlLTR end\tlLTR length\trLTR start\trLTR end\trLTR length\tlTSD start\tlTSD end\tlTSD sequence\trTSD start\trTSD end\trTSD sequence\tPPT start\tPPT end\tPPT motif\tStrand\tPPT offset\tPBS start\tPBS end\tStrand\ttRNA id\ttRNA motif\tPBS offset\ttRNA offset\tPBS/tRNA\t\tClass\tSuperfamily\tClade\tComplete\tStrand\tDomains\tK_Kimura\tK_Ksd\tK_TajimaNei\tK_TNsd\ttimeK\ttimeKsd\tnumComparedSites\ttransitions\tnumComparedSites\ttransversions\tnumComparedSites\ttimeTN\ttransitions_numComparedSites\ttransversions_numComparedSites\tgene/pseudogene\tGene start\tGene end\tgene length\tstrand\tgene annotation' $Collected_Files/$process_id.genes_up_and_down_LTR.tsv
