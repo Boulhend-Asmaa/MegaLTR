@@ -375,26 +375,6 @@ wc -l split_test/LAI/*.pass.list
 
 ---
 
-## Implementation Timeline
-
-### Week 1 (Current)
-- ✅ Day 1: Analyze current splitting mechanisms
-- ✅ Day 1: Implement smart_split_tsv.py
-- ✅ Day 1: Implement smart_split_fasta.py
-- ✅ Day 1: Test standalone scripts
-- 🔄 Day 2: Integrate TSV splitting into MegaLTR.sh
-- 🔄 Day 2: Full pipeline validation
-- 📝 Day 3: Progress Report #5
-
-### Weeks 2-6 (Future - Phase 6)
-- Week 2: Nextflow workflow skeleton
-- Week 3: Implement FASTA splitting + parallel LTR detection
-- Week 4: Coordinate adjustment and result merging
-- Week 5: Testing and validation
-- Week 6: Progress Report #6 + finalization
-
----
-
 ## Conclusion
 
 **For Phase 5**: Focus on TSV splitting optimization
