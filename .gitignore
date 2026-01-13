@@ -1,0 +1,114 @@
+# MegaLTR Pipeline - Git Ignore File
+# Excludes test outputs, logs, and temporary files from version control
+
+# ============================================
+# Test Data (large genomic files)
+# ============================================
+Data_for_test/
+*.fna
+*.fna.gz
+*.gff
+*.gff3
+
+# ============================================
+# Test Output Directories
+# ============================================
+test_*/
+validation_*/
+output_*/
+
+# ============================================
+# Backup Directories
+# ============================================
+backup_*/
+old_*/
+
+# ============================================
+# Log Files
+# ============================================
+*.log
+logs/
+*.out
+*.err
+
+# ============================================
+# Python
+# ============================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ============================================
+# Conda/Virtual Environments
+# ============================================
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# ============================================
+# Temporary Files
+# ============================================
+run_*.sh
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ============================================
+# IDE and Editor Files
+# ============================================
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.project
+.pydevproject
+.settings/
+
+# ============================================
+# Scientific Computing
+# ============================================
+*.hdf5
+*.h5
+*.pkl
+*.pickle
+
+# Keep specific files (exceptions)
+# ============================================
+# If you need to track specific test scripts, add them with !
+# Example:
+# !test_essential.sh
+
+# ============================================
+# Phase-specific files (track in respective branches)
+# ============================================
+# Phase 4 files (feat/conda-env-optimization branch)
+PROGRESS_REPORT_4.md
+
+# Phase 6 files (future Nextflow migration branch)
+bin/RUN/smart_split_fasta.py
