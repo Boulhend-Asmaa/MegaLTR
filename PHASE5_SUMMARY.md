@@ -45,10 +45,13 @@ Replaced fixed splitting with an **adaptive algorithm** that scales chunk count 
 ## What Was Done
 
 ### 1. Problem Analysis
-- Identified two splitting mechanisms in MegaLTR
+- **Identified two splitting mechanisms in MegaLTR**:
+  1. **Genome FASTA splitting** (`cut.pl` in `LTR_HARVEST_parallel`) - Already works correctly ✓
+  2. **Coordinate TSV splitting** (`split -n l/100` in `MegaLTR.sh`) - Buggy ✗
 - Documented critical bug: `split -n l/100` creates 61 empty files for 39 LTR elements
 - Analyzed scalability across genome sizes
 - Quantified waste: 61 file I/O operations, 61 process spawns, 84% overhead
+- **Clarification**: Phase 5 only fixed the coordinate splitting; genome FASTA splitting was already correct
 
 ### 2. Solutions Implemented
 
@@ -74,7 +77,9 @@ Improvement: 84% file reduction
 1. MegaLTR.sh line 337: Replaced `split -n l/100` with `smart_split_tsv.py`
 2. LTR_Seq_threads.py line 27: Added backward-compatible chunk detection
 
-#### B. FASTA Splitting Implementation (Ready for Phase 6)
+#### B. Genome FASTA Splitting Script (Prepared for Phase 6, NOT Integrated)
+
+**Note**: Old MegaLTR already has working genome FASTA splitting via `cut.pl`. This new script is an alternative implementation prepared for future Nextflow integration (Phase 6).
 
 **File**: `bin/RUN/smart_split_fasta.py` (600+ lines)
 

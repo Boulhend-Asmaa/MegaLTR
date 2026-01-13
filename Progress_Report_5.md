@@ -80,17 +80,44 @@ This implementation uses GNU `split` with a fixed chunk count of 100, regardless
 
 ### 2.1 Current Implementation Analysis
 
+**Important Note**: Old MegaLTR already contains genome FASTA splitting that works correctly. Phase 5 addresses a different splitting mechanism.
+
 MegaLTR employs two distinct splitting mechanisms:
 
-**Mechanism A: LTR_HARVEST_parallel (Genome FASTA Splitting)**
-- Location: `bin/LTR_HARVEST_parallel/bin/cut.pl`
-- Method: FASTA-record aware splitting into 5 Mb chunks
-- Assessment: Works correctly, no modification needed
+**Mechanism A: Genome FASTA Splitting (Already Works Correctly ✓)**
+- **Location**: `bin/LTR_HARVEST_parallel/bin/cut.pl` (line 139 in LTR_HARVEST_parallel)
+- **Purpose**: Split genome `.fna` file for parallel LTR detection
+- **Method**: FASTA-record aware splitting into 5 Mb chunks
+- **Implementation**: Perl script using `$/="\n>"` for FASTA record parsing
+- **Output**: Creates `genome_sub1`, `genome_sub2`, etc.
+- **Assessment**: ✓ Works correctly, FASTA-aware, no modification needed in Phase 5
 
-**Mechanism B: Coordinate File Splitting (PROBLEMATIC)**
-- Location: `MegaLTR.sh` line 337
-- Method: `split -n l/100` (fixed 100 chunks)
-- Problem: Creates empty files when input < 100 lines
+**Mechanism B: Coordinate File Splitting (PROBLEMATIC - Phase 5 Fixed This ✗)**
+- **Location**: `MegaLTR.sh` line 327 (not line 337 in newer versions)
+- **Purpose**: Split coordinate file `.ids.extract_seq` for parallel sequence extraction
+- **File format**: TSV text file with coordinates (NOT FASTA), example:
+  ```
+  Chr1    12500    15800    +
+  Chr1    28900    31200    -
+  ```
+- **Method**: `split -n l/100` (fixed 100 chunks, line-based, not FASTA-aware)
+- **Problem**: Creates 61% empty files when input < 100 lines (e.g., 39 LTR coordinates → 100 chunks → 61 empty)
+- **Phase 5 Fix**: Replaced with `smart_split_tsv.py` (adaptive chunk count)
+
+### 2.1.1 Comparison: Two Types of Splitting
+
+| Aspect | Genome FASTA Splitting | Coordinate TSV Splitting |
+|--------|------------------------|--------------------------|
+| **What it splits** | Genome sequences (`.fna` files) | LTR coordinate lists (`.ids.extract_seq`) |
+| **File format** | FASTA (biological sequences) | TSV (tab-separated coordinates) |
+| **Example content** | `>Chr1`<br>`ATCGATCG...` | `Chr1  12500  15800  +` |
+| **Pipeline stage** | Early (LTR detection) | Late (sequence extraction) |
+| **Old implementation** | `cut.pl` (FASTA-aware) | `split -n l/100` (line-based) |
+| **Old status** | ✓ Works correctly | ✗ Creates 61% empty files |
+| **Phase 5 action** | No change needed | ✓ Fixed with `smart_split_tsv.py` |
+| **Location** | `LTR_HARVEST_parallel/bin/cut.pl` | `MegaLTR.sh` line 327 |
+
+**Key Takeaway**: Old MegaLTR already has working genome FASTA splitting. Phase 5 only optimized the coordinate file splitting that was creating empty files.
 
 ### 2.2 Root Cause Analysis
 
