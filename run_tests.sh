@@ -8,7 +8,20 @@
 # See PHASE6_TESTING_PROTOCOL.md for detailed instructions
 #
 
-set -e  # Exit on error
+set +e  # Don't exit on error (we want to report all test results)
+
+# Detect Nextflow installation
+if command -v nextflow > /dev/null 2>&1; then
+    NEXTFLOW="nextflow"
+elif [ -f "/home/asmaa/miniconda3/bin/nextflow" ]; then
+    NEXTFLOW="/home/asmaa/miniconda3/bin/nextflow"
+elif [ -f "$HOME/miniconda3/bin/nextflow" ]; then
+    NEXTFLOW="$HOME/miniconda3/bin/nextflow"
+elif [ -f "./nextflow" ]; then
+    NEXTFLOW="./nextflow"
+else
+    NEXTFLOW="nextflow"  # Will fail gracefully in tests
+fi
 
 echo "============================================================"
 echo " MegaLTR Phase 6 - Quick Validation Suite"
@@ -46,7 +59,7 @@ echo "TEST 1: Syntax Validation"
 echo "-------------------------"
 
 # Check help message
-if nextflow run main.nf --help > /dev/null 2>&1; then
+if $NEXTFLOW run main.nf --help > /dev/null 2>&1; then
     report_test 0 "Workflow syntax valid"
 else
     report_test 1 "Workflow syntax invalid"
@@ -123,9 +136,10 @@ fi
 echo "TEST 4: Nextflow Installation"
 echo "------------------------------"
 
-if command -v nextflow > /dev/null 2>&1; then
-    NF_VERSION=$(nextflow -version 2>&1 | head -1 | awk '{print $3}')
+if $NEXTFLOW -version > /dev/null 2>&1; then
+    NF_VERSION=$($NEXTFLOW -version 2>&1 | head -1 | awk '{print $3}')
     echo "Nextflow version: $NF_VERSION"
+    echo "Nextflow path: $NEXTFLOW"
     report_test 0 "Nextflow installed"
 else
     report_test 1 "Nextflow not found"
@@ -160,7 +174,7 @@ fi
 echo "TEST 6: Workflow Preview"
 echo "------------------------"
 
-if nextflow run main.nf \
+if $NEXTFLOW run main.nf \
     --genome Data_for_test/NC_003070.9_Arabidopsis_thaliana.fna \
     --gff Data_for_test/Arabidopsis_thaliana.gff \
     -preview > /tmp/nf_preview.log 2>&1; then
