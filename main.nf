@@ -456,10 +456,14 @@ process LTRDIGEST {
     # Step 1: Create suffix array index for genome
     gt suffixerator -db ${genome} -indexname ${params.prefix}.fna -tis -suf -lcp -des -ssp -sds -dna
 
-    # Step 2: Prepare GFF3 file (normalize retrotransposon types and remove Classification attribute)
-    # Remove Classification attribute (uppercase attributes are reserved and rejected by gt ltrdigest)
+    # Step 2: Prepare GFF3 file (normalize retrotransposon types and remove uppercase attributes)
+    # Remove all uppercase attributes (Classification, Sequence_ontology, Method, Name)
+    # gt ltrdigest reserves uppercase attributes and rejects them
     # Also normalize retrotransposon types for compatibility
     sed 's/;Classification=[^;]*//g' ${pass_list} | \\
+        sed 's/;Sequence_ontology=[^;]*//g' | \\
+        sed 's/;Method=[^;]*//g' | \\
+        sed 's/;Name=[^;]*//g' | \\
         sed 's/Copia_LTR_retrotransposon/LTR_retrotransposon/g' | \\
         sed 's/Gypsy_LTR_retrotransposon/LTR_retrotransposon/g' > normalized.gff3
 
