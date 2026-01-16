@@ -457,17 +457,15 @@ process LTRDIGEST {
     gt suffixerator -db ${genome} -indexname ${params.prefix}.fna -tis -suf -lcp -des -ssp -sds -dna
 
     # Step 2: Prepare GFF3 file (normalize retrotransposon types)
-    cp ${pass_list} ${params.prefix}.fna.pass.list.gff3
-
-    # Normalize retrotransposon types for LTRdigest
-    sed -i 's/Copia_LTR_retrotransposon/LTR_retrotransposon/g' ${params.prefix}.fna.pass.list.gff3
-    sed -i 's/Gypsy_LTR_retrotransposon/LTR_retrotransposon/g' ${params.prefix}.fna.pass.list.gff3
+    # Nextflow stages pass_list as results.fna.pass.list.gff3, so work directly on it
+    sed 's/Copia_LTR_retrotransposon/LTR_retrotransposon/g' ${pass_list} | \\
+        sed 's/Gypsy_LTR_retrotransposon/LTR_retrotransposon/g' > normalized.gff3
 
     # Step 3: Run LTRdigest with protein domain annotation
     gt -j ${task.cpus} ltrdigest \\
         -trnas ${trna} \\
         -outfileprefix ${params.prefix} \\
-        ${params.prefix}.fna.pass.list.gff3 \\
+        normalized.gff3 \\
         ${params.prefix}.fna \\
         > ${params.prefix}_ltrdigest.gff3
 
