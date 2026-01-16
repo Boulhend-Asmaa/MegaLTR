@@ -394,6 +394,7 @@ process LTR_RETRIEVER {
     path "${params.prefix}.fna.pass.list.gff3", emit: gff3, optional: true
     path "${params.prefix}.fna.out", emit: out_file, optional: true
     path "${params.prefix}.fna.out.LAI", emit: lai, optional: true
+    path "${params.prefix}.fna.LTRlib.fa", emit: ltrlib_fa, optional: true
     path "screen.txt", emit: screen
 
     script:
@@ -1212,8 +1213,13 @@ workflow {
             LTR_RETRIEVER.out.gff3
         )
 
+        // Use LTRDIGEST output if available, otherwise fall back to LTR_RETRIEVER library
+        ltr_sequences = LTRDIGEST.out.complete_fas
+            .mix(LTR_RETRIEVER.out.ltrlib_fa)
+            .first()
+
         TESORTER(
-            LTRDIGEST.out.complete_fas
+            ltr_sequences
         )
 
         // ====================================================================
