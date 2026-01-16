@@ -456,9 +456,11 @@ process LTRDIGEST {
     # Step 1: Create suffix array index for genome
     gt suffixerator -db ${genome} -indexname ${params.prefix}.fna -tis -suf -lcp -des -ssp -sds -dna
 
-    # Step 2: Prepare GFF3 file (normalize retrotransposon types)
-    # Nextflow stages pass_list as results.fna.pass.list.gff3, so work directly on it
-    sed 's/Copia_LTR_retrotransposon/LTR_retrotransposon/g' ${pass_list} | \\
+    # Step 2: Prepare GFF3 file (normalize retrotransposon types and remove Classification attribute)
+    # Remove Classification attribute (uppercase attributes are reserved and rejected by gt ltrdigest)
+    # Also normalize retrotransposon types for compatibility
+    sed 's/;Classification=[^;]*//g' ${pass_list} | \\
+        sed 's/Copia_LTR_retrotransposon/LTR_retrotransposon/g' | \\
         sed 's/Gypsy_LTR_retrotransposon/LTR_retrotransposon/g' > normalized.gff3
 
     # Step 3: Run LTRdigest with protein domain annotation
