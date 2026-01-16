@@ -1226,8 +1226,12 @@ workflow {
         // STAGE 4: Result integration and sequence extraction
         // ====================================================================
 
+        // Create empty tabout if LTRDIGEST failed
+        ltrdigest_tabout = LTRDIGEST.out.tabout
+            .ifEmpty(file("${projectDir}/bin/RUN/empty.tabout.csv"))
+
         MERGE_RESULTS(
-            LTRDIGEST.out.tabout,
+            ltrdigest_tabout,
             TESORTER.out.cls_tsv
         )
 
