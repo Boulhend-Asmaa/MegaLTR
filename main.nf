@@ -451,16 +451,61 @@ process LTRDIGEST {
 
     script:
     """
-    # Run ltrdigest wrapper script
-    bash ${projectDir}/bin/RUN/ltrdigest.sh \\
-        ${params.prefix} \\
-        ${workflow.workDir}/ltrdigest_work \\
-        ${trna.name} \\
-        . \\
-        .
+    # Step 1: Create suffix array index for genome
+    gt suffixerator -db ${genome} -indexname ${params.prefix}.fna -tis -suf -lcp -des -ssp -sds -dna
+
+    # Step 2: Process GFF3 file (remove classifications, extract sequence IDs)
+    cp ${pass_list} ${params.prefix}.fna.pass.list.gff3
+
+    # Remove Classification annotations
+    sed -E -i 's/;Classification=\\S+//g' ${params.prefix}.fna.pass.list.gff3
+
+    # Extract sequence region IDs
+    grep -i "##sequence-region" ${params.prefix}.fna.pass.list.gff3 > sequence-region.ids || touch sequence-region.ids
+    sed -E -i 's/\\s+/\\t/g' sequence-region.ids
+    awk -F "\\t" '{print \$2}' sequence-region.ids > sequence-region.ids.2 || touch sequence-region.ids.2
+
+    # Process sequence IDs from suffix array
+    cp ${params.prefix}.fna.des ${params.prefix}.fna.ids
+    sed -i '\$d' ${params.prefix}.fna.ids
+    sed -i '/^\$/d' ${params.prefix}.fna.ids
+    awk '{print \$0 "\\t" NR-1}' ${params.prefix}.fna.ids > ids.uniq_with_numbers
+
+    # Remove header lines from GFF3
+    sed -i '1,5d' ${params.prefix}.fna.pass.list.gff3
+
+    # Replace Name= with seq_number=
+    sed -i 's/Name=/seq_number=/g' ${params.prefix}.fna.pass.list.gff3
+
+    # Replace sequence IDs with seq numbers
+    while read a b; do
+        sed -i "s/\$a/seq\$b/g" ${params.prefix}.fna.pass.list.gff3
+    done < ids.uniq_with_numbers
+
+    sed -i 's/seq_number=seq/seq_number=/g' ${params.prefix}.fna.pass.list.gff3
+
+    # Rebuild GFF3 header
+    echo "##gff-version 3" > ids.uniq_with_numbers.2
+    awk -F "\\t" '{print "#"\$1}' sequence-region.ids.2 >> ids.uniq_with_numbers.2 || true
+    cat ids.uniq_with_numbers.2 ${params.prefix}.fna.pass.list.gff3 > ${params.prefix}.fna.pass.list.gff4
+
+    # Sort GFF3
+    gt gff3 -sort ${params.prefix}.fna.pass.list.gff4 > ${params.prefix}.fna.pass.list.gff3.sort
+
+    # Normalize retrotransposon types
+    sed -i 's/Copia_LTR_retrotransposon/LTR_retrotransposon/g' ${params.prefix}.fna.pass.list.gff3.sort
+    sed -i 's/Gypsy_LTR_retrotransposon/LTR_retrotransposon/g' ${params.prefix}.fna.pass.list.gff3.sort
+
+    # Step 3: Run LTRdigest
+    gt -j ${task.cpus} ltrdigest \\
+        -trnas ${trna} \\
+        -outfileprefix ${params.prefix} \\
+        ${params.prefix}.fna.pass.list.gff3.sort \\
+        ${params.prefix}.fna \\
+        > ltrdigest.gff3
 
     echo "[LTRDIGEST] Domain annotation complete"
-    echo "  Annotated sequences: \$(grep -c '^>' ${params.prefix}_complete.fas || echo 0)"
+    echo "  Annotated sequences: \$(grep -c '^>' ${params.prefix}_complete.fas 2>/dev/null || echo 0)"
     """
 }
 
