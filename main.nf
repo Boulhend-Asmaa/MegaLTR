@@ -500,7 +500,7 @@ process TESORTER {
     path complete_fas
 
     output:
-    path "${params.prefix}_complete.fas.${params.tesorter_hmm}.cls.tsv", emit: cls_tsv
+    path "*.cls.tsv", emit: cls_tsv
 
     script:
     """
@@ -520,7 +520,7 @@ process TESORTER {
         ${task.cpus}
 
     echo "[TESORTER] Classification complete"
-    echo "  Classified elements: \$(wc -l < ${params.prefix}_complete.fas.${params.tesorter_hmm}.cls.tsv)"
+    echo "  Classified elements: \$(wc -l < *.cls.tsv)"
     """
 }
 
