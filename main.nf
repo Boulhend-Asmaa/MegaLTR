@@ -322,8 +322,7 @@ process LTR_HARVEST {
     script:
     """
     # Get conda environment path for genometools binary
-    conda info --envs | grep MegaLTR | awk '{print \$NF}' > condapath.txt
-    CONDA_PATH=\$(cat condapath.txt)
+    CONDA_PATH=\$(conda info --envs | grep "^MegaLTR " | awk '{print \$NF}')
 
     # Run LTR_HARVEST_parallel
     perl ${projectDir}/bin/LTR_HARVEST_parallel/LTR_HARVEST_parallel \\
