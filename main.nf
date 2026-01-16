@@ -539,6 +539,7 @@ process MERGE_RESULTS {
     input:
     path tabout
     path cls_tsv
+    path pass_list
 
     output:
     path "LTR_Table_TEsorter_Digest.tsv", emit: merged_table
@@ -551,14 +552,36 @@ process MERGE_RESULTS {
     awk -F '\\t' '\$2 == "LTR"' ${cls_tsv} > ${params.prefix}.LTR.tsv
     awk -F '\\t' '\$2 != "LTR"' ${cls_tsv} > ${params.prefix}.others.tsv
 
-    # Convert tabout to TSV
-    perl ${projectDir}/bin/RUN/print.pl ${tabout} > ${params.prefix}.tabout.tsv
+    # Check if tabout has data (LTRDIGEST succeeded) or is empty (LTRDIGEST failed)
+    if [ -s ${tabout} ] && [ "\$(wc -l < ${tabout})" -gt 0 ]; then
+        echo "[MERGE_RESULTS] Using LTRDIGEST tabout data"
+        # Convert tabout to TSV
+        perl ${projectDir}/bin/RUN/print.pl ${tabout} > ${params.prefix}.tabout.tsv
 
-    # Merge LTRdigest and TEsorter results
-    perl ${projectDir}/bin/RUN/TEsorter_Digest.pl \\
-        ${params.prefix}.tabout.tsv \\
-        ${params.prefix}.LTR.tsv \\
-        > 2LTR_Table_TEsorter_Digest.tsv
+        # Merge LTRdigest and TEsorter results
+        perl ${projectDir}/bin/RUN/TEsorter_Digest.pl \\
+            ${params.prefix}.tabout.tsv \\
+            ${params.prefix}.LTR.tsv \\
+            > 2LTR_Table_TEsorter_Digest.tsv
+    else
+        echo "[MERGE_RESULTS] LTRDIGEST unavailable, using LTR_RETRIEVER pass.list"
+        # Use LTR_retriever pass.list to create tabout-like structure
+        # Extract: ID, location info from pass.list, match with TEsorter classification
+        tail -n +2 ${pass_list} | awk -F'\\t' '{
+            split(\$1, loc, ":");
+            split(loc[2], coords, "..");
+            chr=loc[1];
+            start=coords[1];
+            end=coords[2];
+            print chr"_"start"_"end"\\t"chr"\\t"start"\\t"end"\\t"\$8"\\t"\$10"\\t"\$11;
+        }' > ${params.prefix}.passlist.tsv
+
+        # Simple join on sequence ID between pass.list and TEsorter
+        awk 'NR==FNR{a[\$1]=\$0; next} \$1 in a{print a[\$1]"\\t"\$0}' \\
+            ${params.prefix}.passlist.tsv \\
+            ${params.prefix}.LTR.tsv \\
+            > 2LTR_Table_TEsorter_Digest.tsv
+    fi
 
     # Classify and reformat
     python3 ${projectDir}/bin/RUN/classification_NEW_LTR_2.py \\
@@ -1232,7 +1255,8 @@ workflow {
 
         MERGE_RESULTS(
             ltrdigest_tabout,
-            TESORTER.out.cls_tsv
+            TESORTER.out.cls_tsv,
+            LTR_RETRIEVER.out.pass_list
         )
 
         // Phase 5 TSV splitting for parallel sequence extraction
