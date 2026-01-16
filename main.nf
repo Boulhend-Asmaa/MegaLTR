@@ -564,23 +564,19 @@ process MERGE_RESULTS {
             ${params.prefix}.LTR.tsv \\
             > 2LTR_Table_TEsorter_Digest.tsv
     else
-        echo "[MERGE_RESULTS] LTRDIGEST unavailable, using LTR_RETRIEVER pass.list"
-        # Use LTR_retriever pass.list to create tabout-like structure
-        # Extract: ID, location info from pass.list, match with TEsorter classification
-        tail -n +2 ${pass_list} | awk -F'\\t' '{
-            split(\$1, loc, ":");
-            split(loc[2], coords, "..");
-            chr=loc[1];
-            start=coords[1];
-            end=coords[2];
-            print chr"_"start"_"end"\\t"chr"\\t"start"\\t"end"\\t"\$8"\\t"\$10"\\t"\$11;
-        }' > ${params.prefix}.passlist.tsv
-
-        # Simple join on sequence ID between pass.list and TEsorter
-        awk 'NR==FNR{a[\$1]=\$0; next} \$1 in a{print a[\$1]"\\t"\$0}' \\
-            ${params.prefix}.passlist.tsv \\
-            ${params.prefix}.LTR.tsv \\
-            > 2LTR_Table_TEsorter_Digest.tsv
+        echo "[MERGE_RESULTS] LTRDIGEST unavailable, creating TEsorter-only results"
+        # Create simplified results from TEsorter classification only
+        # Extract coordinates from sequence IDs and combine with classification
+        awk -F'\\t' '{
+            # Parse ID: chr:start..end_type#superfamily
+            if (match(\$1, /([^:]+):([0-9]+)..([0-9]+)/, arr)) {
+                chr = arr[1];
+                start = arr[2];
+                end = arr[3];
+                len = end - start + 1;
+                print \$1"\\t"\$2"\\t"\$3"\\t"\$4"\\t"\$5"\\t"\$6"\\t"\$7"\\t"chr"\\t"start"\\t"end"\\t"len;
+            }
+        }' ${params.prefix}.LTR.tsv > 2LTR_Table_TEsorter_Digest.tsv
     fi
 
     # Classify and reformat
