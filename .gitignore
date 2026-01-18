@@ -1,0 +1,31 @@
+# Test run output directories
+test_run*/
+
+# Log files
+*.log
+run.log
+
+# Backup files
+backup_perl/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Temporary files
+*.tmp
+*.bak
+
+# Large data files (suffix arrays, indexes, etc.)
+*.suf
+*.des
+*.esq
+*.sds
+*.ois
+*.ssp
+*.lcp
+*.llv
+*.prj
+
+# Shell scripts (if user-generated)
+run_megaltr.sh

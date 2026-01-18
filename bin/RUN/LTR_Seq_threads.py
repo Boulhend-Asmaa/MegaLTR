@@ -1,30 +1,50 @@
+#!/usr/bin/env python3
+import sys
 import os
 import glob
-import sys
-
-FASTAfile=sys.argv[1]
-LTRfiles=sys.argv[2]
-outdir=sys.argv[3]
-nprocess=sys.argv[4]
-extractseq=sys.argv[5]
-# nprocess=6
-# set number of CPUs to run on
-ncore = f"{nprocess}"
-# ncore = "4"
-os.environ["OMP_NUM_THREADS"] = ncore
-os.environ["OPENBLAS_NUM_THREADS"] = ncore
-os.environ["MKL_NUM_THREADS"] = ncore
-os.environ["VECLIB_MAXIMUM_THREADS"] = ncore
-os.environ["NUMEXPR_NUM_THREADS"] = ncore
-
-data=glob.glob(f"{LTRfiles}/*")
-
 from multiprocessing import Pool
-def f(fname):
-     
-    #Function is bieng executed
-    os.system(f"perl {extractseq} {FASTAfile} {fname} {outdir}/LTR-RT_Sequence.fa")
 
-# set a number of processes to use ncore each ### with work as for
-with Pool(int(nprocess)) as p:
-    results  = p.map(f, data)
+# Args:
+# 1 FASTAfile
+# 2 LTRfiles (folder containing split files)
+# 3 outdir
+# 4 nprocess
+# 5 extractseq (script path: .pl or .py)
+FASTAfile = sys.argv[1]
+LTRfiles  = sys.argv[2]
+outdir    = sys.argv[3]
+nprocess  = int(sys.argv[4])
+extractseq = sys.argv[5]
+
+# Avoid over-threading in BLAS libs
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+
+# Only process split chunk files (usually named xaa, xab, ...)
+data = sorted(glob.glob(f"{LTRfiles}/x*"))
+out_fa = f"{outdir}/LTR-RT_Sequence.fa"
+
+def run_one(fname: str) -> int:
+    # Choose runner based on script extension
+    if extractseq.endswith(".py"):
+        cmd = f"python3 {extractseq} {FASTAfile} {fname} {out_fa}"
+    else:
+        cmd = f"perl {extractseq} {FASTAfile} {fname} {out_fa}"
+
+    ret = os.system(cmd)
+    if ret != 0:
+        raise SystemExit(f"ERROR: extractseq failed (exit={ret}): {cmd}")
+    return ret
+
+if __name__ == "__main__":
+    # Ensure output file starts clean
+    # (MegaLTR expects appending to this file)
+    if os.path.exists(out_fa):
+        os.remove(out_fa)
+
+    with Pool(nprocess) as p:
+        p.map(run_one, data)
+
