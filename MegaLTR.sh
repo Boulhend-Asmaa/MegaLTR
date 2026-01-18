@@ -333,8 +333,16 @@ perl $LTR_HARVEST \
          awk -F "\t" '{ print  $2"\t"$3"\t"$4"\t"$5"\t"$32"\t"$33"\t"$34 }' $Others/LTR_Table_TEsorter_Digest.tsv > $Others/$process_id.ids.extract_seq
          mkdir -p $userpath/LTRFiles
          LTRFiles=$userpath/LTRFiles
-         cd $LTRFiles
-         split -n l/100 $Others/$process_id.ids.extract_seq
+
+         # --- Smart splitting: adaptive chunks, no empty files (Phase 5 optimization) ---
+         echo "$(date) Splitting coordinate file for parallel extraction..."
+         python3 $RUN/smart_split_tsv.py \
+             $Others/$process_id.ids.extract_seq \
+             $LTRFiles \
+             --threads $threads \
+             --prefix chunk \
+             2>&1 | grep -E "(Created|Error|Warning)" || true
+
          python3 $RUN/LTR_Seq_threads.py $userpath/$process_id.fna  $LTRFiles $Collected_Files $threads $RUN/extractseq-id-start-end.py
 
          cp $ltrdigest/"$process_id"_pbs.fas $Collected_Files/$process_id.PBS.Sequence.fa

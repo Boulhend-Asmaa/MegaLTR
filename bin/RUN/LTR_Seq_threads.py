@@ -23,8 +23,17 @@ os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
 
-# Only process split chunk files (usually named xaa, xab, ...)
-data = sorted(glob.glob(f"{LTRfiles}/x*"))
+# Support both new (chunk*) and old (x*) chunk naming for backward compatibility
+data = sorted(glob.glob(f"{LTRfiles}/chunk*"))
+if not data:
+    # Fallback to old split naming
+    data = sorted(glob.glob(f"{LTRfiles}/x*"))
+if not data:
+    raise FileNotFoundError(
+        f"No chunk files found in {LTRfiles} "
+        f"(tried patterns: chunk*, x*)"
+    )
+
 out_fa = f"{outdir}/LTR-RT_Sequence.fa"
 
 def run_one(fname: str) -> int:
