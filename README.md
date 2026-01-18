@@ -1,6 +1,51 @@
-﻿# # MegaLTR
+﻿# MegaLTR
 
-MegaLTR is a robust online server and local standalone that can identifies intact LTR-RTs and calculate LTR Assembly Index (LAI) in any target genome. MegaLTR is freely available at [https://bioinformatics.um6p.ma/MegaLTR](https://bioinformatics.um6p.ma/MegaLTR)
+MegaLTR is a robust online server and local standalone that identifies intact LTR-RTs and calculates LTR Assembly Index (LAI) in any target genome. MegaLTR is freely available at [https://bioinformatics.um6p.ma/MegaLTR](https://bioinformatics.um6p.ma/MegaLTR)
+
+## Nextflow Pipeline (Recommended)
+
+MegaLTR now includes a **Nextflow DSL2 pipeline** for improved reproducibility, parallelization, and HPC compatibility.
+
+### Quick Start with Nextflow
+
+```bash
+# Install Nextflow (if not already installed)
+curl -s https://get.nextflow.io | bash
+
+# Run with conda profile (recommended)
+./nextflow run main.nf \
+    --genome /path/to/genome.fasta \
+    --gff /path/to/annotation.gff \
+    --analysis_type 3 \
+    -profile conda
+```
+
+### Conda Environment
+
+- **`MegaLTR.clean.yml`** - Recommended environment (optimized, version-locked)
+- **`MegaLTR.yml`** - Legacy environment (original, for backwards compatibility)
+
+The Nextflow pipeline uses `MegaLTR.clean.yml` by default with `-profile conda`.
+
+### Nextflow Profiles
+
+| Profile | Description |
+|---------|-------------|
+| `conda` | Uses MegaLTR.clean.yml (recommended) |
+| `docker` | Containerized execution |
+| `singularity` | HPC-compatible containers |
+| `slurm` | SLURM cluster execution |
+
+### Documentation
+
+Detailed documentation is available in the `docs/` folder:
+- `docs/phase_notes/PHASE6_QUICK_START.md` - Quick start guide
+- `docs/phase_notes/PHASE6_WORKFLOW_DESIGN.md` - Pipeline architecture
+- `docs/progress_reports/FINAL_PROJECT_REPORT.md` - Complete project report
+
+---
+
+## Legacy Bash Pipeline
 
 
 MegaLTR is a pipeline that detects intact LTR-RTs at the whole genome level. The pipeline integrates the structure-based, homology-based and de novo intact LTR-RT identification, classification, annotation and visualization tools such as [LTR_FINEDR](https://github.com/xzhub/LTR_Finder), [LTRharvest](http://genometools.org/pub/binary_distributions/), [LTR_retriever](https://github.com/oushujun/LTR_retriever), [RepeatMasker](http://www.repeatmasker.org/), [CDHIT package](http://weizhongli-lab.org/cd-hit/), [BLAST+ package](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/), [HMMER package](http://hmmer.org/),  [LTRdigest](https://www.zbh.uni-hamburg.de/en/forschung/gi/software/ltrdigest.html), [TEsorter](https://github.com/zhangrengang/TEsorter), l [REANNOTATE](http://www.bioinformatics.org/reannotate/about.html), [ClustalW](https://anaconda.org/bioconda/clustalw), [faidx](https://anaconda.org/bioconda/pyfaidx), [Rscript](https://www.rdocumentation.org/packages/utils/versions/3.6.2/topics/Rscript), and [RIdeogram](https://cran.r-project.org/web/packages/RIdeogram/vignettes/RIdeogram.html).
@@ -26,16 +71,19 @@ MegaLTR has been tested on Ubuntu 18.04 and 20.04.
  6. Output files example
 #
 ## **Install**
-The installation require conda. You can install all dependencies for running MegaLTR in a new conda environment using the MegaLTR.yml file. If you do not have conda, please follow [this tutorial](https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html).
+The installation requires conda. You can install all dependencies for running MegaLTR in a new conda environment. If you do not have conda, please follow [this tutorial](https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html).
 
-1- Download repository from github 
->`git clone https://github.com/MoradMMokhtar/MegaLTR.git` 
+1- Download repository from github
+>`git clone https://github.com/MoradMMokhtar/MegaLTR.git`
 
-2- Go to the MegaLTR folder 
->`cd MegaLTR ` 
+2- Go to the MegaLTR folder
+>`cd MegaLTR `
 
-3- Create the MegaLTR environment with all dependencies   
->`conda env create -f MegaLTR.yml`  
+3- Create the MegaLTR environment with all dependencies
+>`conda env create -f MegaLTR.clean.yml`  *(recommended)*
+
+Or use the legacy environment:
+>`conda env create -f MegaLTR.yml`  *(legacy)*  
   
 4- Activate the MegaLTR environment  
 >`conda activate MegaLTR`
