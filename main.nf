@@ -564,41 +564,43 @@ process MERGE_RESULTS {
             ${params.prefix}.LTR.tsv \\
             > 2LTR_Table_TEsorter_Digest.tsv
     else
-        echo "[MERGE_RESULTS] LTRDIGEST unavailable, creating TEsorter-only results"
-        # Create simplified results from TEsorter classification only
-        # Extract coordinates from sequence IDs and combine with classification
-        awk -F'\\t' '{
-            # Parse ID: chr:start..end_type#superfamily
-            if (match(\$1, /([^:]+):([0-9]+)..([0-9]+)/, arr)) {
-                chr = arr[1];
-                start = arr[2];
-                end = arr[3];
-                len = end - start + 1;
-                print \$1"\\t"\$2"\\t"\$3"\\t"\$4"\\t"\$5"\\t"\$6"\\t"\$7"\\t"chr"\\t"start"\\t"end"\\t"len;
-            }
-        }' ${params.prefix}.LTR.tsv > 2LTR_Table_TEsorter_Digest.tsv
+        echo "[MERGE_RESULTS] LTRDIGEST unavailable, using merge_retriever_tesorter.py"
+        # Use Python script to merge LTR_retriever pass.list with TEsorter classification
+        # This creates proper 37-column output compatible with classification_NEW_LTR_2.py
+        python3 ${projectDir}/bin/RUN/merge_retriever_tesorter.py \\
+            ${pass_list} \\
+            ${params.prefix}.LTR.tsv \\
+            2LTR_Table_TEsorter_Digest.tsv
     fi
 
-    # Classify and reformat
-    python3 ${projectDir}/bin/RUN/classification_NEW_LTR_2.py \\
-        2LTR_Table_TEsorter_Digest.tsv \\
-        new_LTR_Table_TEsorter_Digest.tsv
+    # Check if we have data to process
+    if [ ! -s 2LTR_Table_TEsorter_Digest.tsv ]; then
+        echo "[MERGE_RESULTS] WARNING: No LTR elements found, creating empty output files"
+        touch LTR_Table_TEsorter_Digest.tsv
+        touch ${params.prefix}.statistics.tsv
+        touch ${params.prefix}.ids.extract_seq
+    else
+        # Classify and reformat
+        python3 ${projectDir}/bin/RUN/classification_NEW_LTR_2.py \\
+            2LTR_Table_TEsorter_Digest.tsv \\
+            new_LTR_Table_TEsorter_Digest.tsv
 
-    # Reorder columns
-    awk -F'\\t' '{print \$2"\\t"\$3"\\t"\$4"\\t"\$5"\\t"\$6"\\t"\$7"\\t"\$8"\\t"\$9"\\t"\$10"\\t"\$11"\\t"\$12"\\t"\$13"\\t"\$14"\\t"\$15"\\t"\$16"\\t"\$17"\\t"\$18"\\t"\$19"\\t"\$20"\\t"\$21"\\t"\$22"\\t"\$23"\\t"\$24"\\t"\$25"\\t"\$26"\\t"\$27"\\t"\$28"\\t"\$29"\\t"\$30"\\t"\$31"\\t"\$32"\\t"\$33"\\t"\$1"\\t"\$35"\\t"\$36"\\t"\$37"\\t"\$38}' \\
-        new_LTR_Table_TEsorter_Digest.tsv > LTR_Table_TEsorter_Digest.tsv
+        # Reorder columns
+        awk -F'\\t' '{print \$2"\\t"\$3"\\t"\$4"\\t"\$5"\\t"\$6"\\t"\$7"\\t"\$8"\\t"\$9"\\t"\$10"\\t"\$11"\\t"\$12"\\t"\$13"\\t"\$14"\\t"\$15"\\t"\$16"\\t"\$17"\\t"\$18"\\t"\$19"\\t"\$20"\\t"\$21"\\t"\$22"\\t"\$23"\\t"\$24"\\t"\$25"\\t"\$26"\\t"\$27"\\t"\$28"\\t"\$29"\\t"\$30"\\t"\$31"\\t"\$32"\\t"\$33"\\t"\$1"\\t"\$35"\\t"\$36"\\t"\$37"\\t"\$38}' \\
+            new_LTR_Table_TEsorter_Digest.tsv > LTR_Table_TEsorter_Digest.tsv
 
-    # Generate superfamily statistics
-    awk -F "\\t" '{print \$2"\\t"\$33"\\t"\$3"\\t"\$4"\\t"\$5}' \\
-        LTR_Table_TEsorter_Digest.tsv > ${params.prefix}.length.ids.forstat
+        # Generate superfamily statistics
+        awk -F "\\t" '{print \$2"\\t"\$33"\\t"\$3"\\t"\$4"\\t"\$5}' \\
+            LTR_Table_TEsorter_Digest.tsv > ${params.prefix}.length.ids.forstat
 
-    python3 ${projectDir}/bin/RUN/super_familly_stat.py \\
-        ${params.prefix}.length.ids.forstat \\
-        ${params.prefix}.statistics.tsv
+        python3 ${projectDir}/bin/RUN/super_familly_stat.py \\
+            ${params.prefix}.length.ids.forstat \\
+            ${params.prefix}.statistics.tsv
 
-    # Extract coordinates for sequence extraction
-    awk -F "\\t" '{print \$2"\\t"\$3"\\t"\$4"\\t"\$5"\\t"\$32"\\t"\$33"\\t"\$34}' \\
-        LTR_Table_TEsorter_Digest.tsv > ${params.prefix}.ids.extract_seq
+        # Extract coordinates for sequence extraction
+        awk -F "\\t" '{print \$2"\\t"\$3"\\t"\$4"\\t"\$5"\\t"\$32"\\t"\$33"\\t"\$34}' \\
+            LTR_Table_TEsorter_Digest.tsv > ${params.prefix}.ids.extract_seq
+    fi
 
     echo "[MERGE_RESULTS] Integration complete"
     echo "  Total LTR elements: \$(wc -l < LTR_Table_TEsorter_Digest.tsv)"
