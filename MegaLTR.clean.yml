@@ -20,6 +20,7 @@ dependencies:
   - tesorter=1.5.1                 # TE classification and annotation
   - clustalw=2.1                   # Multiple sequence alignment for insertion time
   - vsearch                        # Sequence clustering (required by LTR_retriever but not declared)
+  - perl-bioperl                    # Bio::SeqIO for sequence extraction (extractseq-id-start-end.pl)
 
   # === Python Packages ===
   - numpy=2.2.*           # Numerical computing (estimate_K.py)
@@ -45,7 +46,6 @@ dependencies:
 #   - vsearch (required by LTR_retriever but not in conda metadata)
 #
 # Removed from original environment:
-#   - perl-bioperl (transitive via ltr_retriever)
 #   - perl-text-soundex (transitive via ltr_retriever)
 #   - pthread-stubs (unused low-level library)
 #   - gzip (use system gzip)
