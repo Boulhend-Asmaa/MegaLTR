@@ -716,19 +716,19 @@ process BUILD_NONREDUNDANT_LIBRARY {
 
     script:
     """
-    # Sort by length (longest first)
-    ${projectDir}/bin/RUN/usearch11.0.667_i86linux32 \\
-        -sortbylength ${sequences} \\
-        -fastaout LTR-RT_Sequence_sorted.fa \\
-        -log usearch.log
+    # Sort by length (longest first) using vsearch
+    vsearch \\
+        --sortbylength ${sequences} \\
+        --output LTR-RT_Sequence_sorted.fa \\
+        2>&1 | tee usearch.log
 
-    # Cluster at 90% identity (keeps centroids)
-    ${projectDir}/bin/RUN/usearch11.0.667_i86linux32 \\
-        -cluster_fast LTR-RT_Sequence_sorted.fa \\
-        -id 0.9 \\
-        -centroids LTR-RTs_non-redundant_library.fasta \\
-        -uc result.uc \\
-        -log usearch2.log
+    # Cluster at 90% identity (keeps centroids) using vsearch
+    vsearch \\
+        --cluster_fast LTR-RT_Sequence_sorted.fa \\
+        --id 0.9 \\
+        --centroids LTR-RTs_non-redundant_library.fasta \\
+        --uc result.uc \\
+        2>&1 | tee usearch2.log
 
     cat usearch2.log >> usearch.log
 
