@@ -26,6 +26,9 @@ params.genome = null
 params.gff = null
 params.outdir = "megaltr_results"
 params.prefix = "results"
+// LTRDIGEST HMM profiles (optional but enables full domain annotation)
+params.ltrdigest_hmm_dir = null     // directory containing *.hmm or a combined .hmm
+params.ltrdigest_hmm_file = null    // path to a single combined HMM file (Pfam-A.hmm etc.)
 
 // Analysis type: 1=LTR detection only, 2=+insertion time, 3=+gene analysis, 4=LAI only
 params.analysis_type = 3
@@ -468,9 +471,28 @@ process LTRDIGEST {
         sed 's/Copia_LTR_retrotransposon/LTR_retrotransposon/g' | \\
         sed 's/Gypsy_LTR_retrotransposon/LTR_retrotransposon/g' > normalized.gff3
 
-    # Step 3: Run LTRdigest with protein domain annotation
+    # Step 3: Run LTRdigest (use HMMs if provided)
+    HMM_OPT=""
+
+    if [ -n "${params.ltrdigest_hmm_file}" ] && [ "${params.ltrdigest_hmm_file}" != "null" ] && [ -f "${params.ltrdigest_hmm_file}" ]; then
+        echo "[LTRDIGEST] Using HMM file: ${params.ltrdigest_hmm_file}"
+        HMM_OPT="-hmms ${params.ltrdigest_hmm_file}"
+    elif [ -n "${params.ltrdigest_hmm_dir}" ] && [ "${params.ltrdigest_hmm_dir}" != "null" ] && [ -d "${params.ltrdigest_hmm_dir}" ]; then
+        # Concatenate all HMM files if multiple exist
+        if ls "${params.ltrdigest_hmm_dir}"/*.hmm >/dev/null 2>&1; then
+            echo "[LTRDIGEST] Using HMM directory: ${params.ltrdigest_hmm_dir}"
+            cat "${params.ltrdigest_hmm_dir}"/*.hmm > combined.hmm
+            HMM_OPT="-hmms combined.hmm"
+        else
+            echo "[LTRDIGEST] HMM directory provided but no *.hmm found"
+        fi
+    else
+        echo "[LTRDIGEST] No HMM profiles provided -> running without protein-domain annotation"
+    fi
+
     gt -j ${task.cpus} ltrdigest \\
         -trnas ${trna} \\
+        \${HMM_OPT} \\
         -outfileprefix ${params.prefix} \\
         normalized.gff3 \\
         ${params.prefix}.fna \\
@@ -1247,9 +1269,13 @@ workflow {
         // STAGE 4: Result integration and sequence extraction
         // ====================================================================
 
-        // Create empty tabout if LTRDIGEST failed
+        // Create empty fallbacks if LTRDIGEST failed
         ltrdigest_tabout = LTRDIGEST.out.tabout
             .ifEmpty(file("${projectDir}/bin/RUN/empty.tabout.csv"))
+        ltrdigest_pbs = LTRDIGEST.out.pbs
+            .ifEmpty(file("${projectDir}/bin/RUN/empty.fas"))
+        ltrdigest_ppt = LTRDIGEST.out.ppt
+            .ifEmpty(file("${projectDir}/bin/RUN/empty.fas"))
 
         MERGE_RESULTS(
             ltrdigest_tabout,
@@ -1317,8 +1343,8 @@ workflow {
                     MERGE_RESULTS.out.merged_table,
                     EXTRACT_SEQUENCES.out.sequences,
                     BUILD_NONREDUNDANT_LIBRARY.out.library,
-                    LTRDIGEST.out.pbs,
-                    LTRDIGEST.out.ppt,
+                    ltrdigest_pbs,
+                    ltrdigest_ppt,
                     CALCULATE_INSERTION_TIME.out.time_table,
                     IDENTIFY_GENE_CHIMERAS.out.chimera_table,
                     FIND_NEARBY_GENES.out.nearby_genes,
