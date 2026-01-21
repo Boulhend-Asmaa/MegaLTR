@@ -3,7 +3,7 @@
 **Author**: Asmaa Boulhend
 **Institution**: UM6P - Bioinformatics Lab
 **Date**: January 21, 2026
-**Project Duration**: January 5, 2026 - January 16, 2026
+**Project Duration**: January 5, 2026 - January 21, 2026
 
 ---
 
