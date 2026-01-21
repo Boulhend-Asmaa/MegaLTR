@@ -1,10 +1,9 @@
 # MegaLTR Workflow Optimization: Final Project Report
 
 **Author**: Asmaa Boulhend
-**Supervisor**: [Supervisor Name]
-**Institution**: [Institution Name]
-**Date**: January 20, 2026
-**Project Duration**: [Start Date] - January 16, 2026
+**Institution**: UM6P - Bioinformatics Lab
+**Date**: January 21, 2026
+**Project Duration**: January 5, 2026 - January 16, 2026
 
 ---
 
