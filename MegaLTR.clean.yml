@@ -1,54 +1,55 @@
 # MegaLTR Clean Environment Specification
 # Minimal, reproducible bioinformatics pipeline environment
 # Platform: linux-64
-# Date: 2026-01-09
+# Date: 2026-01-21
+# Fixed: Removed conflicting packages (perl-bioperl, r-rideogram, rmblast constraint)
 
 name: MegaLTR
 channels:
-  - conda-forge  # Preferred: stable, well-maintained packages
-  - bioconda     # Bioinformatics-specific tools
-  - defaults     # Anaconda fallback
+  - conda-forge
+  - bioconda
 
 dependencies:
   # === Language Runtimes ===
-  - python=3.10.6         # All Python scripts tested with this version
-  - r-base=4.5.1          # R visualization scripts
+  - python>=3.8,<3.12
+  - r-base>=4.1,<4.4
 
   # === Core Bioinformatics Tools ===
-  - genometools-genometools=1.6.6  # gt ltrharvest, gt ltrdigest
-  - ltr_retriever=3.0.4            # Main LTR-RT identification pipeline
-  - tesorter=1.5.1                 # TE classification and annotation
-  - clustalw=2.1                   # Multiple sequence alignment for insertion time
-  - vsearch                        # Sequence clustering (required by LTR_retriever but not declared)
-  - perl-bioperl                    # Bio::SeqIO for sequence extraction (extractseq-id-start-end.pl)
+  - genometools-genometools=1.6.5   # gt ltrharvest, gt ltrdigest (1.6.5 more stable)
+  - ltr_retriever=3.0.1             # Main LTR-RT identification pipeline
+  - tesorter=1.4.6                  # TE classification and annotation
+  - clustalw=2.1                    # Multiple sequence alignment for insertion time
+  - vsearch                         # Sequence clustering (required by LTR_retriever)
+  - perl                            # Perl runtime
+  - perl-bioperl-core               # Core Bio::SeqIO module (lighter than perl-bioperl)
 
   # === Python Packages ===
-  - numpy=2.2.*           # Numerical computing (estimate_K.py)
-  - pyfaidx               # FASTA indexing (used by LTR_retriever)
+  - numpy
+  - pyfaidx                         # FASTA indexing (used by LTR_retriever)
+  - biopython                       # Required by several tools
 
   # === R Visualization Packages ===
-  - r-ggplot2             # Main plotting library
-  - r-viridis             # Perceptually uniform color scales
-  - r-hrbrthemes          # Clean plot themes
-  - r-rideogram           # Chromosome ideogram visualization
-  - cairo                 # Graphics backend for R plotting
+  - r-ggplot2                       # Main plotting library
+  - r-viridis                       # Perceptually uniform color scales
+  - r-hrbrthemes                    # Clean plot themes
+  - cairo                           # Graphics backend for R plotting
+
+  # === Java (for Nextflow) ===
+  - openjdk>=11
 
 # === Notes ===
+# Removed r-rideogram due to dependency conflicts - chromosome visualization
+# can be done with alternative R packages if needed.
+#
+# Using perl-bioperl-core instead of full perl-bioperl to avoid
+# the perl-bio-tools-run-alignment-tcoffee dependency issue.
+#
+# Removed rmblast constraint - ltr_retriever pulls correct version.
+#
 # Transitive dependencies automatically installed:
-#   - perl, perl-threaded (via ltr_retriever)
 #   - cd-hit (via ltr_retriever)
 #   - hmmer (via tesorter)
 #   - repeatmasker, rmblast (via ltr_retriever)
-#   - biopython (via ltr_retriever/tesorter)
-#   - R package dependencies (dplyr, tidyr, scales, etc.)
-#
-# Explicit dependencies added due to missing declarations:
-#   - vsearch (required by LTR_retriever but not in conda metadata)
-#
-# Removed from original environment:
-#   - perl-text-soundex (transitive via ltr_retriever)
-#   - pthread-stubs (unused low-level library)
-#   - gzip (use system gzip)
 #
 # To generate fully-pinned lock file:
 #   conda env export -n MegaLTR --no-builds > MegaLTR.lock.yml
