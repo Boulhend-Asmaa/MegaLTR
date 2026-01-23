@@ -1270,12 +1270,13 @@ workflow {
         // ====================================================================
 
         // Create empty fallbacks if LTRDIGEST failed
+        // Use separate files for PBS and PPT to avoid Nextflow file name collision
         ltrdigest_tabout = LTRDIGEST.out.tabout
             .ifEmpty(file("${projectDir}/bin/RUN/empty.tabout.csv"))
         ltrdigest_pbs = LTRDIGEST.out.pbs
-            .ifEmpty(file("${projectDir}/bin/RUN/empty.fas"))
+            .ifEmpty(file("${projectDir}/bin/RUN/empty_pbs.fas"))
         ltrdigest_ppt = LTRDIGEST.out.ppt
-            .ifEmpty(file("${projectDir}/bin/RUN/empty.fas"))
+            .ifEmpty(file("${projectDir}/bin/RUN/empty_ppt.fas"))
 
         MERGE_RESULTS(
             ltrdigest_tabout,
