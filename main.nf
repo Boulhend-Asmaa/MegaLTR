@@ -471,7 +471,10 @@ process LTRDIGEST {
         sed 's/Copia_LTR_retrotransposon/LTR_retrotransposon/g' | \\
         sed 's/Gypsy_LTR_retrotransposon/LTR_retrotransposon/g' > normalized.gff3
 
-    # Step 3: Run LTRdigest (use HMMs if provided)
+    # Step 3: Sort GFF3 file (required by gt ltrdigest)
+    gt gff3 -sort -tidy -retainids normalized.gff3 > sorted.gff3
+
+    # Step 4: Run LTRdigest (use HMMs if provided)
     HMM_OPT=""
 
     if [ -n "${params.ltrdigest_hmm_file}" ] && [ "${params.ltrdigest_hmm_file}" != "null" ] && [ -f "${params.ltrdigest_hmm_file}" ]; then
@@ -494,7 +497,7 @@ process LTRDIGEST {
         -trnas ${trna} \\
         \${HMM_OPT} \\
         -outfileprefix ${params.prefix} \\
-        normalized.gff3 \\
+        sorted.gff3 \\
         ${params.prefix}.fna \\
         > ${params.prefix}_ltrdigest.gff3
 
