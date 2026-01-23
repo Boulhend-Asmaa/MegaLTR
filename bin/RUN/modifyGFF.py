@@ -1,4 +1,3 @@
-import re
 import sys
 import shutil
 
@@ -15,7 +14,7 @@ mappings = {}
 with open(mapping_file, 'r') as file:
     for line in file:
         word, replacement = line.strip().split('=')
-        
+
         if order == '2':
             mappings[replacement.replace('>','')] = word.replace('>','')
         elif order == '1':
@@ -23,20 +22,25 @@ with open(mapping_file, 'r') as file:
         else:
             print("order must be 1 or 2")
             sys.exit(1)
-# print(mappings)       
+
+print(f"[modifyGFF.py] Loaded {len(mappings)} ID mappings")
 
 temp_output_file = input_file + ".tmp"
 
+processed = 0
 with open(input_file, 'r') as infile, open(temp_output_file, 'w') as outfile:
     for line in infile:
         if not line.startswith('#'):
+            # Use str.replace() instead of re.sub() - much faster for literal strings
+            # Also check if replacement exists in line before replacing (avoids unnecessary work)
             for replacement, word in mappings.items():
-                line = re.sub(re.escape(replacement) , word, line)
-                # line = re.sub(re.escape(replacement) + r'\t', word+r'\t', line) ## use this if you have tab at the end of the ids
-
+                if replacement in line:
+                    line = line.replace(replacement, word)
         outfile.write(line)
-
+        processed += 1
+        if processed % 10000 == 0:
+            print(f"[modifyGFF.py] Processed {processed} lines...")
 
 shutil.move(temp_output_file, input_file)
 
-# print("Replacement complete!")
+print(f"[modifyGFF.py] Complete: {processed} lines processed")
