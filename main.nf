@@ -495,6 +495,7 @@ process LTRDIGEST {
 
     gt -j ${task.cpus} ltrdigest \\
         -trnas ${trna} \\
+        -matchdescstart \\
         \${HMM_OPT} \\
         -outfileprefix ${params.prefix} \\
         sorted.gff3 \\
