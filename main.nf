@@ -1262,8 +1262,12 @@ workflow {
         )
 
         // Use LTRDIGEST output if available, otherwise fall back to LTR_RETRIEVER library
+        // IMPORTANT: Use .concat() not .mix() - concat processes in order, mix has race conditions
+        // Since LTRDIGEST depends on LTR_RETRIEVER, LTRDIGEST output arrives later
+        // With concat: if LTRDIGEST succeeds, its output comes first; if it fails (empty channel),
+        // concat moves to LTR_RETRIEVER output
         ltr_sequences = LTRDIGEST.out.complete_fas
-            .mix(LTR_RETRIEVER.out.ltrlib_fa)
+            .concat(LTR_RETRIEVER.out.ltrlib_fa)
             .first()
 
         TESORTER(
