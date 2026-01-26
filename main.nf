@@ -207,15 +207,21 @@ process PREPARE_TRNA {
     val trna_name
 
     output:
-    path "${trna_name}", emit: trna
+    path "*.fa", emit: trna
 
     script:
+    def basename = new File(trna_name).getName()
     """
     # Copy tRNA file and clean headers
-    cp ${projectDir}/bin/tRNA/${trna_name} .
-    sed -i 's/\\t.*//g' ${trna_name}
+    # Support both filename-only (from bin/tRNA/) and full paths
+    if [ -f "${trna_name}" ]; then
+        cp ${trna_name} ${basename}
+    else
+        cp ${projectDir}/bin/tRNA/${trna_name} ${basename}
+    fi
+    sed -i 's/\\t.*//g' ${basename}
 
-    echo "[PREPARE_TRNA] tRNA database prepared: ${trna_name}"
+    echo "[PREPARE_TRNA] tRNA database prepared: ${basename}"
     """
 }
 
