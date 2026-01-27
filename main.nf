@@ -421,6 +421,17 @@ process LTR_RETRIEVER {
         -minlen ${params.min_ltr_len} \\
         > screen.txt 2>&1
 
+    # LTR_RETRIEVER may add '.mod' suffix when it modifies the genome
+    # (removes short sequences, etc.). Rename .mod files so Nextflow
+    # output channels can find them with the expected names.
+    if [ -f "${params.prefix}.fna.mod.pass.list" ] && [ ! -f "${params.prefix}.fna.pass.list" ]; then
+        echo "[LTR_RETRIEVER] Detected .mod suffix, renaming output files"
+        for f in ${params.prefix}.fna.mod.*; do
+            newname=\$(echo "\$f" | sed 's/.fna.mod./.fna./')
+            cp "\$f" "\$newname"
+        done
+    fi
+
     # Extract key metrics
     echo "[LTR_RETRIEVER] Processing complete"
 
