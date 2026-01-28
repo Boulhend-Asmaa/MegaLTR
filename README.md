@@ -35,6 +35,38 @@ The Nextflow pipeline uses `MegaLTR.clean.yml` by default with `-profile conda`.
 | `docker` | Containerized execution |
 | `singularity` | HPC-compatible containers |
 | `slurm` | SLURM cluster execution |
+| `hpc` | UM6P HPC with SLURM (optimized) |
+| `test` | Lab computers with limited resources |
+
+### HPC Execution (SLURM Clusters)
+
+For large genomes on HPC clusters with SLURM:
+
+```bash
+# Load required modules (adjust for your HPC)
+module load Anaconda3
+module load Java/17
+
+# Create conda environment (first time only)
+conda env create -f MegaLTR.clean.yml -p ./conda_env
+
+# Run the pipeline
+nextflow run main.nf -profile hpc \
+  --genome /path/to/genome.fna \
+  --gff /path/to/annotation.gff \
+  --analysis_type 3
+```
+
+**Checkpoint/Resume:** If a job times out or fails, use `-resume` to continue from the last checkpoint:
+
+```bash
+nextflow run main.nf -profile hpc -resume \
+  --genome /path/to/genome.fna \
+  --gff /path/to/annotation.gff \
+  --analysis_type 3
+```
+
+The `-resume` flag ensures completed steps are cached and not re-executed. This is essential for large genomes that may require multiple job submissions.
 
 ### Documentation
 
