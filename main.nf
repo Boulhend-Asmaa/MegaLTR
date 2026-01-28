@@ -330,8 +330,17 @@ process LTR_HARVEST {
 
     script:
     """
-    # Get conda environment path for genometools binary
-    CONDA_PATH=\$(conda info --envs | grep "^MegaLTR " | awk '{print \$NF}')
+    # Get genometools (gt) binary path
+    # CONDA_PREFIX is set automatically when Nextflow activates the conda environment
+    if [ -n "\$CONDA_PREFIX" ] && [ -f "\$CONDA_PREFIX/bin/gt" ]; then
+        GT_BIN="\$CONDA_PREFIX/bin/gt"
+    elif command -v gt &> /dev/null; then
+        GT_BIN=\$(command -v gt)
+    else
+        echo "ERROR: genometools (gt) not found" >&2
+        exit 1
+    fi
+    echo "[LTR_HARVEST] Using gt binary: \$GT_BIN"
 
     # Run LTR_HARVEST_parallel
     perl ${projectDir}/bin/LTR_HARVEST_parallel/LTR_HARVEST_parallel \\
@@ -339,7 +348,7 @@ process LTR_HARVEST {
         -threads ${task.cpus} \\
         -size 1000000 \\
         -time 500 \\
-        -gt \${CONDA_PATH}/bin/gt \\
+        -gt \${GT_BIN} \\
         ${params.min_ltr_len} \\
         ${params.max_ltr_len} \\
         ${params.similarity} \\

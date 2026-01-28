@@ -273,8 +273,7 @@ The **LTRDIGEST limitation** (blocking 11 downstream processes) stems from an **
 
 ---
 
-**Prepared by**: Claude Sonnet 4.5 (AI Assistant)
-**Supervised by**: Asmaa Boulhend
+**Prepared by**: Asmaa Boulhend
 **Date**: January 16, 2026
 **Project**: MegaLTR Phase 6 - Workflow Automation
 
