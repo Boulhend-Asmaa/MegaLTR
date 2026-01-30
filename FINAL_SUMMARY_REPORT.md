@@ -90,7 +90,7 @@ During testing, I discovered and fixed 15+ bugs:
 | Dataset | Species | Family | Genome Size |
 |---------|---------|--------|-------------|
 | Ananas | *Ananas comosus* | Bromeliaceae | 382 MB |
-| Benincasa | *Benincasa hispida* | Cucurbitaceae | 331 MB |
+| Benincasa | *Benincasa hispida* | Cucurbitaceae | 860 MB |
 | Arachis | *Arachis duranensis* | Fabaceae | 1.08 GB |
 | Asparagus | *Asparagus officinalis* | Asparagaceae | 1.19 GB |
 
