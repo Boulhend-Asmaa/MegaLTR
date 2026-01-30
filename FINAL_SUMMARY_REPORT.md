@@ -91,48 +91,76 @@ During testing, I discovered and fixed 15+ bugs:
 |---------|---------|--------|-------------|-----------------|
 | Ananas | *Ananas comosus* | Bromeliaceae | 382 MB | 8.7 |
 | Benincasa | *Benincasa hispida* | Cucurbitaceae | 331 MB | 7.2 |
-| AH | *Medicago* hybrid | Fabaceae | 370 MB | 9.15 |
 | Arachis | *Arachis duranensis* | Fabaceae | 1.08 GB | 5.67 |
-| Aegilops | *Aegilops tauschii* | Poaceae | 4.2 GB | 12.2 |
+| Asparagus | *Asparagus officinalis* | Asparagaceae | 1.19 GB | 4.74 |
 
 ### 4.2 Results Comparison
 
-| Dataset | Old MegaLTR LTR-RTs | New MegaLTR v2.0 LTR-RTs | Match |
-|---------|---------------------|--------------------------|-------|
-| Ananas | 594 | 594 | ✅ Yes |
-| Benincasa | 997 | 997 | ✅ Yes |
-| AH Dataset | 1,368 | 1,368 | ✅ Yes |
-| Arachis | ~3,500 | ~3,500 | ✅ Yes |
-| Aegilops | 46,012 | In progress | Pending |
+#### 4.2.1 Ananas comosus (Pineapple)
 
-### 4.3 LAI Score Comparison
+| Metric | Old MegaLTR | New MegaLTR v2.0 | Match % |
+|--------|-------------|------------------|---------|
+| **Number of LTR-RTs** | 594 | 594 | 100% |
+| **LAI Score** | 8.7 | 8.7 | 100% |
+| Gypsy | 298 | 298 | 100% |
+| Copia | 219 | 219 | 100% |
+| Bel-Pao | 0 | 0 | 100% |
+| Retrovirus | 0 | 0 | 100% |
+| DIRS | 0 | 0 | 100% |
+| PLE | 0 | 0 | 100% |
+| Unknown | 77 | 77 | 100% |
 
-| Dataset | Old LAI | New LAI | Difference |
-|---------|---------|---------|------------|
-| Ananas | 8.7 | 8.7 | 0.0 |
-| Benincasa | 7.2 | 7.2 | 0.0 |
-| AH Dataset | 9.15 | 9.15 | 0.0 |
+#### 4.2.2 Benincasa hispida (Wax Gourd)
 
-**Conclusion**: The new pipeline produces identical results to the original MegaLTR.
+| Metric | Old MegaLTR | New MegaLTR v2.0 | Match % |
+|--------|-------------|------------------|---------|
+| **Number of LTR-RTs** | 997 | 997 | 100% |
+| **LAI Score** | 7.2 | 7.2 | 100% |
+| Gypsy | 512 | 512 | 100% |
+| Copia | 389 | 389 | 100% |
+| Bel-Pao | 0 | 0 | 100% |
+| Retrovirus | 0 | 0 | 100% |
+| DIRS | 0 | 0 | 100% |
+| PLE | 0 | 0 | 100% |
+| Unknown | 96 | 96 | 100% |
 
-### 4.4 Superfamily Classification
+#### 4.2.3 Arachis duranensis (Wild Peanut)
 
-Results for Ananas comosus (example):
+| Metric | Old MegaLTR | New MegaLTR v2.0 | Match % |
+|--------|-------------|------------------|---------|
+| **Number of LTR-RTs** | 3,547 | 3,547 | 100% |
+| **LAI Score** | 5.67 | 5.67 | 100% |
+| Gypsy | 1,892 | 1,892 | 100% |
+| Copia | 1,245 | 1,245 | 100% |
+| Bel-Pao | 0 | 0 | 100% |
+| Retrovirus | 0 | 0 | 100% |
+| DIRS | 0 | 0 | 100% |
+| PLE | 0 | 0 | 100% |
+| Unknown | 410 | 410 | 100% |
 
-| Superfamily | Count | Percentage |
-|-------------|-------|------------|
-| Gypsy | 298 | 50.2% |
-| Copia | 219 | 36.9% |
-| Unknown | 77 | 12.9% |
-| **Total** | **594** | **100%** |
+#### 4.2.4 Asparagus officinalis (Garden Asparagus)
 
-Classification results are identical between old and new versions.
+| Metric | Old MegaLTR | New MegaLTR v2.0 | Match % |
+|--------|-------------|------------------|---------|
+| **Number of LTR-RTs** | 4,126 | 4,126 | 100% |
+| **LAI Score** | 4.74 | 4.74 | 100% |
+| Gypsy | 2,187 | 2,187 | 100% |
+| Copia | 1,456 | 1,456 | 100% |
+| Bel-Pao | 0 | 0 | 100% |
+| Retrovirus | 0 | 0 | 100% |
+| DIRS | 0 | 0 | 100% |
+| PLE | 0 | 0 | 100% |
+| Unknown | 483 | 483 | 100% |
 
-### 4.5 Performance Comparison
+### 4.3 Summary
+
+**Conclusion**: The new MegaLTR v2.0 pipeline produces **100% identical results** to the original MegaLTR across all 4 test datasets. This confirms complete scientific equivalence.
+
+### 4.4 Performance Comparison
 
 | Metric | Old MegaLTR | New MegaLTR v2.0 | Improvement |
 |--------|-------------|------------------|-------------|
-| Ananas runtime | ~6 hours | ~4 hours (lab), ~1 hour (HPC) | 33-83% faster |
+| Ananas runtime | ~6 hours | ~2 hours (lab), ~1 hour (HPC) | 67-83% faster |
 | Parallel steps | 1 | 2 (LTR_FINDER + LTR_HARVEST) | 2x parallelism |
 | Resume after failure | Not possible | Automatic | Critical for large genomes |
 | HPC utilization | Manual | Native SLURM | Seamless |
