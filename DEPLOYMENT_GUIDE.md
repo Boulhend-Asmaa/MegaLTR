@@ -31,7 +31,7 @@ Here's everything you need to deploy the new MegaLTR v2.0 on our university serv
 
 ```bash
 cd /var/www/  # or your web application directory
-git clone https://github.com/Boulhend-Asmaa/MegaLTR.git
+git clone https://github.com/Boulhend-Asmaa/MegaLTR_private_private.git
 cd MegaLTR
 git checkout feat/phase6_Nextflow  # or 'main' after merge
 ```
@@ -183,7 +183,7 @@ function runMegaLTR(genomePath, gffPath, outputDir, analysisType = 3, threads = 
 
 ```bash
 # Clone repository
-git clone https://github.com/Boulhend-Asmaa/MegaLTR.git
+git clone https://github.com/Boulhend-Asmaa/MegaLTR_private_private.git
 cd MegaLTR
 git checkout feat/phase6_Nextflow
 
@@ -335,7 +335,7 @@ nextflow run main.nf --genome Ananas.fna --gff Ananas.gff --analysis_type 3 -pro
 
 If you have questions during deployment:
 - **Asmaa Boulhend** - Pipeline development
-- **Repository**: https://github.com/Boulhend-Asmaa/MegaLTR
+- **Repository**: https://github.com/Boulhend-Asmaa/MegaLTR_private
 - **Branch**: `feat/phase6_Nextflow` (or `main` after merge)
 
 ---

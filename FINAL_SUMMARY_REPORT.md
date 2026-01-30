@@ -214,7 +214,7 @@ The `-resume` flag ensures completed steps are cached and not re-executed.
 
 ```bash
 # Clone and switch to new branch
-git clone https://github.com/Boulhend-Asmaa/MegaLTR.git
+git clone https://github.com/Boulhend-Asmaa/MegaLTR_private.git
 cd MegaLTR
 git checkout feat/phase6_Nextflow
 
@@ -275,7 +275,7 @@ I recommend replacing the old MegaLTR with this new version for all future analy
 
 **Contact**: Asmaa Boulhend
 **Email**: asmaa.boulhend@um6p.ma
-**Repository**: https://github.com/Boulhend-Asmaa/MegaLTR (branch: feat/phase6_Nextflow)
+**Repository**: https://github.com/Boulhend-Asmaa/MegaLTR_private (branch: feat/phase6_Nextflow)
 
 ---
 
